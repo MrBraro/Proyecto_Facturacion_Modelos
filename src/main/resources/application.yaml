@@ -1,0 +1,132 @@
+# =============================================
+# Configuración para Proyecto_Facturación
+# =============================================
+
+# ─── PERFIL ACTIVO ───────────────────────────
+spring:
+  profiles:
+    active: dev
+
+---
+# =============================================
+# PERFIL: DESARROLLO (dev)
+# =============================================
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  # ─── BASE DE DATOS POSTGRESQL ──────────────
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/facturacion_db}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:cesr1311}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+
+  # ─── JPA / HIBERNATE ───────────────────────
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update          # Crea/actualiza tablas automáticamente
+    show-sql: true              # Muestra SQL en consola
+    properties:
+      hibernate:
+        format_sql: true        # Formatea el SQL para mejor lectura
+        use_sql_comments: true  # Añade comentarios al SQL generado
+
+  # ─── DEVTOOLS ──────────────────────────────
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+ 
+
+# ─── APP CUSTOM PROPERTIES ──────────────────
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev_secret_key_cambiar_en_produccion_minimo_256_bits}
+
+# ─── LOGGING ─────────────────────────────────
+logging:
+  level:
+    root: INFO
+    com.modelosgr86e1eq6.proyectofacturacion: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE  # Muestra valores de parámetros
+
+# ─── SERVIDOR ────────────────────────────────
+server:
+  port: 8082
+  servlet:
+    context-path: /
+  error:
+    include-stacktrace: always   # Muestra stacktrace en errores (solo dev)
+
+---
+# =============================================
+# PERFIL: PRODUCCIÓN (prod)
+# =============================================
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${DATABASE_URL}            # Variable de entorno (requerida)
+    username: ${DATABASE_USERNAME}  # Variable de entorno (requerida)
+    password: ${DATABASE_PASSWORD}  # Variable de entorno (requerida)
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate            # Solo valida, nunca modifica esquema
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  thymeleaf:
+    cache: true                     # Caché activado en producción
+
+  devtools:
+    restart:
+      enabled: false                # DevTools desactivado en producción
+
+# ─── APP CUSTOM PROPERTIES ──────────────────
+app:
+  jwt:
+    secret: ${JWT_SECRET}           # Variable de entorno (requerida)
+
+logging:
+  level:
+    root: WARN
+    com.modelosgr86e1eq6.proyectofacturacion: INFO
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-stacktrace: never       # No exponer stacktrace al usuario
+
+---
+# =============================================
+# CONFIGURACIONES COMUNES
+# =============================================
+
+# ─── SPRING SECURITY ─────────────────────────
+# Nota: La configuración detallada va en clases Java @Configuration
+# spring:
+#   security:
+#     user:
+#       name: admin
+#       password: ${ADMIN_PASSWORD:admin123}
