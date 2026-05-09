@@ -5,9 +5,6 @@ import java.time.LocalDateTime;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +33,7 @@ import lombok.RequiredArgsConstructor;
  
 @Service
 @RequiredArgsConstructor
-public class AuthService implements UserDetailsService {
+public class AuthService {
  
     private final UserRepository        userRepository;
     private final SessionRepository     sessionRepository;
@@ -47,10 +44,10 @@ public class AuthService implements UserDetailsService {
  
     // ── UserDetailsService (requerido por Spring Security) ────────────────────
  
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    // ── Método interno para cargar usuario ────────────────────────────────────
+    private User getUserByEmailOrThrow(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Usuario no encontrado: " + email));
     }
  
@@ -95,7 +92,7 @@ public class AuthService implements UserDetailsService {
             throw e;
         }
  
-        User user = (User) loadUserByUsername(request.getEmail());
+        User user = getUserByEmailOrThrow(request.getEmail());
  
         String token = jwtUtils.generateToken(user);
  
