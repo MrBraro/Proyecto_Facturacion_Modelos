@@ -1,6 +1,6 @@
 package com.modelosgr86e1eq6.proyectofacturacion.auth.dto;
 
-import com.cocobongo.cerveceria.users.entities.Role;
+import com.modelosgr86e1eq6.proyectofacturacion.users.entities.Role;
 import lombok.Data;
 /** GET /auth/me */
 @Data

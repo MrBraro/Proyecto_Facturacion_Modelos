@@ -1,11 +1,35 @@
 package com.modelosgr86e1eq6.proyectofacturacion.auth.services;
+
+import java.time.LocalDateTime;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.modelosgr86e1eq6.proyectofacturacion.auth.dto.ChangePasswordRequest;
 import com.modelosgr86e1eq6.proyectofacturacion.auth.dto.ForgotPasswordRequest;
 import com.modelosgr86e1eq6.proyectofacturacion.auth.dto.LoginRequest;
 import com.modelosgr86e1eq6.proyectofacturacion.auth.dto.LoginResponse;
 import com.modelosgr86e1eq6.proyectofacturacion.auth.dto.RegisterRequest;
-import com.modelosgr86e1eq6.proyectofacturacion.auth.entities.SessionEntity;
 import com.modelosgr86e1eq6.proyectofacturacion.auth.utils.JwtUtils;
+import com.modelosgr86e1eq6.proyectofacturacion.auth.dto.ResetPasswordRequest;
+
+import com.modelosgr86e1eq6.proyectofacturacion.common.exception.BusinessException;
+import com.modelosgr86e1eq6.proyectofacturacion.common.exception.ResourceNotFoundException;
+import com.modelosgr86e1eq6.proyectofacturacion.users.entities.Role;
+import com.modelosgr86e1eq6.proyectofacturacion.users.entities.User;
+import com.modelosgr86e1eq6.proyectofacturacion.users.repositories.UserRepository;
+import com.modelosgr86e1eq6.proyectofacturacion.auth.entities.Session;
+import com.modelosgr86e1eq6.proyectofacturacion.auth.repositories.SessionRepository;
+import com.modelosgr86e1eq6.proyectofacturacion.audits.services.AuditService;
+
+
 
 
 import lombok.RequiredArgsConstructor;
@@ -76,7 +100,7 @@ public class AuthService implements UserDetailsService {
         String token = jwtUtils.generateToken(user);
  
         // Persistir sesión
-        SessionEntity session = SessionEntity.builder()
+        Session session = Session.builder()
                 .user(user)
                 .token(token)
                 .expiresAt(jwtUtils.getExpirationAsLocalDateTime())
@@ -99,7 +123,7 @@ public class AuthService implements UserDetailsService {
  
     @Transactional
     public void logout(String token, String ip) {
-        SessionEntity session = sessionRepository.findByToken(token)
+        Session session = sessionRepository.findByToken(token)
                 .orElseThrow(() -> new ResourceNotFoundException("Sesión no encontrada"));
  
         session.setActive(false);
@@ -126,7 +150,7 @@ public class AuthService implements UserDetailsService {
         String resetToken = jwtUtils.generateToken(user);
  
         // Guardar como sesión temporal marcada
-        SessionEntity session = SessionEntity.builder()
+        Session session = Session.builder()
                 .user(user)
                 .token(resetToken)
                 .expiresAt(LocalDateTime.now().plusMinutes(30))
@@ -145,8 +169,8 @@ public class AuthService implements UserDetailsService {
  
     @Transactional
     public void resetPassword(ResetPasswordRequest request, String ip) {
-        SessionEntity session = sessionRepository.findByToken(request.getToken())
-                .filter(SessionEntity::isActive)
+        Session session = sessionRepository.findByToken(request.getToken())
+                .filter(Session::isActive)
                 .orElseThrow(() -> new BusinessException(
                         "Token inválido o expirado"));
  
