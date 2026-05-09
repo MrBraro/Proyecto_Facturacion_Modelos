@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.modelosgr86e1eq6.proyectofacturacion.audits.dto.AuditDTO;
 import com.modelosgr86e1eq6.proyectofacturacion.audits.entities.AuditEntity;
+import com.modelosgr86e1eq6.proyectofacturacion.audits.mappers.AuditMapper;
 import com.modelosgr86e1eq6.proyectofacturacion.audits.services.AuditService;
 import com.modelosgr86e1eq6.proyectofacturacion.auth.dto.ChangePasswordRequest;
 import com.modelosgr86e1eq6.proyectofacturacion.auth.dto.ForgotPasswordRequest;
@@ -42,6 +44,7 @@ public class AuthController {
  
     private final AuthService  authService;
     private final AuditService auditService;
+    private final AuditMapper   auditMapper;
  
     // ── POST /api/v1/auth/register ─────────────────────────────────────────────
     @PostMapping("/auth/register")
@@ -160,7 +163,7 @@ public class AuthController {
     // ── GET /api/v1/audit ──────────────────────────────────────────────────────
     @GetMapping("/audit")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Page<AuditEntity>>> getAudit(
+    public ResponseEntity<ApiResponse<Page<AuditDTO>>> getAudit(
             @RequestParam(required = false) Integer userId,
             @RequestParam(required = false) String  action,
             @RequestParam(required = false)
@@ -170,6 +173,8 @@ public class AuthController {
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
  
         Page<AuditEntity> page = auditService.findByFilters(userId, action, from, to, pageable);
-        return ResponseEntity.ok(ApiResponse.ok(page));
+        // Mapear a DTO seguro que excluye Session (con token JWT) y expone solo campos públicos
+        Page<AuditDTO> dtoPage = page.map(auditMapper::toDTO);
+        return ResponseEntity.ok(ApiResponse.ok(dtoPage));
     }
 }
