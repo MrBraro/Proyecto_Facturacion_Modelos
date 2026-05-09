@@ -1,7 +1,7 @@
 package com.modelosgr86e1eq6.proyectofacturacion.auth.config;
 
 
-import com.cocobongo.cerveceria.auth.filters.JwtAuthFilter;
+import com.modelosgr86e1eq6.proyectofacturacion.auth.filters.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
