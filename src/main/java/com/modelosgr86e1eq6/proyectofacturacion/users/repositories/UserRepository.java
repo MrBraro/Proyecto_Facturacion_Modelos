@@ -29,8 +29,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Query("""
         SELECT u FROM User u
         WHERE (:role     IS NULL OR u.role     = :role)
-          AND (:branchId IS NULL OR u.idBranch = :branchId)
-        ORDER BY u.createdAt DESC
+          AND (:branchId IS NULL OR u.idBranch = :branchId)       
     """)
     Page<User> findByFilters(
             @Param("role")     Role    role,
