@@ -72,18 +72,18 @@ public class AuthController {
  
         if (authHeader == null || authHeader.isBlank()) {
              return ResponseEntity.status(401)
-                     .body(ApiResponse.ok("El header Authorization es obligatorio"));
+                     .body(ApiResponse.error("El header Authorization es obligatorio"));
          }
  
          if (!authHeader.startsWith("Bearer ")) {
              return ResponseEntity.badRequest()
-                     .body(ApiResponse.ok("El header Authorization debe tener el formato 'Bearer <token>'"));
+                     .body(ApiResponse.error("El header Authorization debe tener el formato 'Bearer <token>'"));
          }
  
          String token = authHeader.substring(7).trim();
          if (token.isEmpty()) {
              return ResponseEntity.badRequest()
-                     .body(ApiResponse.ok("El token Bearer no puede estar vacío"));
+                     .body(ApiResponse.error("El token Bearer no puede estar vacío"));
          }
 
 
