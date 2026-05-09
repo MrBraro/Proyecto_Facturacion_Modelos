@@ -17,6 +17,9 @@
 
     <properties>
         <java.version>21</java.version>
+        <maven.compiler.release>21</maven.compiler.release> <!-- AÑADIR -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> <!-- AÑADIR -->
+    <lombok.version>1.18.40</lombok.version> <!-- ACTUALIZAR -->
     </properties>
 
     <dependencies>
@@ -52,10 +55,12 @@
 
         <!-- ── Lombok ── -->
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <version>${lombok.version}</version> <!-- AÑADIR VERSIÓN -->
+    <optional>true</optional>
+    <scope>provided</scope> <!-- AÑADIR SCOPE -->
+</dependency>
 
         <!-- ── Dev tools ── -->
         <dependency>
@@ -139,6 +144,37 @@
                     </excludes>
                 </configuration>
             </plugin>
+
+            <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <configuration>
+                <excludes>
+                    <exclude>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                    </exclude>
+                </excludes>
+            </configuration>
+        </plugin>
+
+            <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.13.0</version>
+            <configuration>
+                <source>21</source>
+                <target>21</target>
+                <release>21</release>
+                <annotationProcessorPaths>
+                    <path>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                        <version>${lombok.version}</version>
+                    </path>
+                </annotationProcessorPaths>
+            </configuration>
+        </plugin>
         </plugins>
     </build>
 
