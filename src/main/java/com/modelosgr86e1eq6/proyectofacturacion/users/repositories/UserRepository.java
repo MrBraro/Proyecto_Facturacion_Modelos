@@ -19,7 +19,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     boolean existsByEmail(String email);
  
     // Cuenta cuántos ADMINs activos hay — usado para proteger el único ADMIN
-    long countByRoleAndIsActiveTrue(com.modelosgr86e1eq6.proyectofacturacion.users.entities.Role role);
+    long countByRoleAndIsActiveTrue(Role role);
 
     /*
      * JPQL con filtros opcionales — patrón IS NULL como cortocircuito.
