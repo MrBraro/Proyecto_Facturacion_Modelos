@@ -49,7 +49,7 @@ public class UserController {
     @PostMapping
     public ResponseEntity<ApiResponse<UserSummaryResponse>> create(
             @Valid @RequestBody CreateUserRequest request,
-            @AuthenticationPrincipal UserEntity admin,
+            @AuthenticationPrincipal User admin,
             HttpServletRequest httpRequest) {
  
         UserSummaryResponse created = userService.createEmployee(
@@ -62,7 +62,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserSummaryResponse>> update(
             @PathVariable Integer id,
             @Valid @RequestBody UpdateUserRequest request,
-            @AuthenticationPrincipal UserEntity admin,
+            @AuthenticationPrincipal User admin,
             HttpServletRequest httpRequest) {
  
         UserSummaryResponse updated = userService.update(
@@ -74,7 +74,7 @@ public class UserController {
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<ApiResponse<Void>> deactivate(
             @PathVariable Integer id,
-            @AuthenticationPrincipal UserEntity admin,
+            @AuthenticationPrincipal User admin,
             HttpServletRequest httpRequest) {
  
         userService.deactivate(id, admin, httpRequest.getRemoteAddr());
@@ -85,7 +85,7 @@ public class UserController {
     @PatchMapping("/{id}/activate")
     public ResponseEntity<ApiResponse<Void>> activate(
             @PathVariable Integer id,
-            @AuthenticationPrincipal UserEntity admin,
+            @AuthenticationPrincipal User admin,
             HttpServletRequest httpRequest) {
  
         userService.activate(id, admin, httpRequest.getRemoteAddr());

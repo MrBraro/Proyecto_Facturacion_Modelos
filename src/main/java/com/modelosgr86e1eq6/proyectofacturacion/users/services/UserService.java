@@ -4,7 +4,7 @@ import com.modelosgr86e1eq6.proyectofacturacion.users.entities.Role;
 import com.modelosgr86e1eq6.proyectofacturacion.users.entities.User;
 import com.modelosgr86e1eq6.proyectofacturacion.auth.repositories.SessionRepository;
 import com.modelosgr86e1eq6.proyectofacturacion.users.repositories.UserRepository;
-import com.modelosgr86e1eq6.proyectofacturacion.auth.services.AuditService;
+import com.modelosgr86e1eq6.proyectofacturacion.audits.services.AuditService;
 import com.modelosgr86e1eq6.proyectofacturacion.common.exception.BusinessException;
 import com.modelosgr86e1eq6.proyectofacturacion.common.exception.ResourceNotFoundException;
 import com.modelosgr86e1eq6.proyectofacturacion.users.dto.CreateUserRequest;
@@ -45,13 +45,13 @@ public class UserService {
  
     @Transactional
     public UserSummaryResponse createEmployee(CreateUserRequest request,
-                                              UserEntity admin,
+                                              User admin,
                                               String ip) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new BusinessException("El correo ya está en uso");
         }
  
-        UserEntity employee = UserEntity.builder()
+        User employee = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
@@ -71,8 +71,8 @@ public class UserService {
  
     @Transactional
     public UserSummaryResponse update(Integer id, UpdateUserRequest request,
-                                      UserEntity admin, String ip) {
-        UserEntity user = getOrThrow(id);
+                                      User admin, String ip) {
+        User user = getOrThrow(id);
  
         // Si cambia el correo, verificar que no esté en uso
         if (!user.getEmail().equals(request.getEmail())
@@ -94,8 +94,8 @@ public class UserService {
     // ── RF-SEG-08: Desactivar usuario ─────────────────────────────────────────
  
     @Transactional
-    public void deactivate(Integer id, UserEntity admin, String ip) {
-        UserEntity user = getOrThrow(id);
+    public void deactivate(Integer id, User admin, String ip) {
+        User user = getOrThrow(id);
  
         // No permitir desactivar al único ADMIN activo
         if (user.getRole() == Role.ADMIN) {
@@ -119,8 +119,8 @@ public class UserService {
     // ── RF-SEG-08: Reactivar usuario ──────────────────────────────────────────
  
     @Transactional
-    public void activate(Integer id, UserEntity admin, String ip) {
-        UserEntity user = getOrThrow(id);
+    public void activate(Integer id, User admin, String ip) {
+        User user = getOrThrow(id);
         user.setActive(true);
         userRepository.save(user);
  
@@ -130,13 +130,13 @@ public class UserService {
  
     // ── Interno ───────────────────────────────────────────────────────────────
  
-    private UserEntity getOrThrow(Integer id) {
+    private User getOrThrow(Integer id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Usuario no encontrado con id: " + id));
     }
  
-    private UserSummaryResponse toSummary(UserEntity user) {
+    private UserSummaryResponse toSummary(User user) {
         UserSummaryResponse dto = new UserSummaryResponse();
         dto.setId(user.getIdUser());
         dto.setName(user.getName());
