@@ -1,22 +1,32 @@
 package com.modelosgr86e1eq6.proyectofacturacion.users.controllers;
 
-import com.modelosgr86e1eq6.proyectofacturacion.users.entities.Role;
-import com.modelosgr86e1eq6.proyectofacturacion.users.entities.User;
-import com.modelosgr86e1eq6.proyectofacturacion.common.dto.ApiResponse;
-import com.modelosgr86e1eq6.proyectofacturacion.users.dto.CreateUserRequest;
-import com.modelosgr86e1eq6.proyectofacturacion.users.dto.UpdateUserRequest;
-import com.modelosgr86e1eq6.proyectofacturacion.users.dto.UserSummaryResponse;
-import com.modelosgr86e1eq6.proyectofacturacion.users.services.UserService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.modelosgr86e1eq6.proyectofacturacion.common.dto.ApiResponse;
+import com.modelosgr86e1eq6.proyectofacturacion.users.dto.CreateUserRequest;
+import com.modelosgr86e1eq6.proyectofacturacion.users.dto.UpdateUserRequest;
+import com.modelosgr86e1eq6.proyectofacturacion.users.dto.UserSummaryResponse;
+import com.modelosgr86e1eq6.proyectofacturacion.users.entities.Role;
+import com.modelosgr86e1eq6.proyectofacturacion.users.entities.User;
+import com.modelosgr86e1eq6.proyectofacturacion.users.services.UserService;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
  
 @RestController
 @RequestMapping("/api/v1/users")
@@ -30,10 +40,9 @@ public class UserController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<UserSummaryResponse>>> getAll(
             @RequestParam(required = false) Role    role,
-            @RequestParam(required = false) Integer branchId,
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
  
-        Page<UserSummaryResponse> page = userService.findAll(role, branchId, pageable);
+        Page<UserSummaryResponse> page = userService.findAll(role, pageable);
         return ResponseEntity.ok(ApiResponse.ok(page));
     }
  
