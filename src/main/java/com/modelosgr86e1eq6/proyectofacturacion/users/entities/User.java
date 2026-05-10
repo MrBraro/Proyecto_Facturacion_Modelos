@@ -24,20 +24,17 @@ public class User implements UserDetails {
     @Column(name = "id_user")
     private Integer idUser;
  
-    @Column(name = "id_branch")
-    private Integer idBranch;
- 
-    @Column(nullable = false, length = 100)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
  
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
  
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
  
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "role", nullable = false, length = 20)
     private Role role;
  
     @Column(name = "is_active", nullable = false)

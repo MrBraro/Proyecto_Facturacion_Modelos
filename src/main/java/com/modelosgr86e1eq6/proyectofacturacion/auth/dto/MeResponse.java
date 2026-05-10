@@ -9,6 +9,5 @@ public class MeResponse {
     private String  name;
     private String  email;
     private Role    role;
-    private Integer branchId;
     private boolean active;
 }
