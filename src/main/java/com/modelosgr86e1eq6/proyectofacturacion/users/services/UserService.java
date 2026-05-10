@@ -56,7 +56,6 @@ public class UserService {
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(Role.EMPLOYEE)
-                .idBranch(request.getBranchId())
                 .isActive(true)
                 .build();
  
@@ -82,7 +81,6 @@ public class UserService {
  
         user.setName(request.getName());
         user.setEmail(request.getEmail());
-        user.setIdBranch(request.getBranchId());
         userRepository.save(user);
  
         auditService.log(AuditService.USER_UPDATED, admin, null, ip,
@@ -142,7 +140,6 @@ public class UserService {
         dto.setName(user.getName());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
-        dto.setBranchId(user.getIdBranch());
         dto.setActive(user.isActive());
         dto.setCreatedAt(user.getCreatedAt());
         
