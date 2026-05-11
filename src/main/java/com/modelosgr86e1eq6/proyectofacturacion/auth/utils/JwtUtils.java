@@ -62,7 +62,6 @@ public class JwtUtils {
                 .subject(user.getEmail())
                 .claim("userId",   user.getIdUser())
                 .claim("role",     user.getRole().name())
-                .claim("branchId", user.getIdBranch())
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(getKey())

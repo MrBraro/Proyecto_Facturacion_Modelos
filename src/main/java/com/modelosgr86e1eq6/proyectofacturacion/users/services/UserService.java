@@ -1,21 +1,23 @@
 package com.modelosgr86e1eq6.proyectofacturacion.users.services;
 
-import com.modelosgr86e1eq6.proyectofacturacion.users.entities.Role;
-import com.modelosgr86e1eq6.proyectofacturacion.users.entities.User;
-import com.modelosgr86e1eq6.proyectofacturacion.auth.repositories.SessionRepository;
-import com.modelosgr86e1eq6.proyectofacturacion.users.repositories.UserRepository;
-import com.modelosgr86e1eq6.proyectofacturacion.audits.services.AuditService;
-import com.modelosgr86e1eq6.proyectofacturacion.common.exception.BusinessException;
-import com.modelosgr86e1eq6.proyectofacturacion.common.exception.ResourceNotFoundException;
-import com.modelosgr86e1eq6.proyectofacturacion.users.dto.CreateUserRequest;
-import com.modelosgr86e1eq6.proyectofacturacion.users.dto.UpdateUserRequest;
-import com.modelosgr86e1eq6.proyectofacturacion.users.dto.UserSummaryResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.modelosgr86e1eq6.proyectofacturacion.audits.services.AuditService;
+import com.modelosgr86e1eq6.proyectofacturacion.auth.repositories.SessionRepository;
+import com.modelosgr86e1eq6.proyectofacturacion.common.exception.BusinessException;
+import com.modelosgr86e1eq6.proyectofacturacion.common.exception.ResourceNotFoundException;
+import com.modelosgr86e1eq6.proyectofacturacion.users.dto.CreateUserRequest;
+import com.modelosgr86e1eq6.proyectofacturacion.users.dto.UpdateUserRequest;
+import com.modelosgr86e1eq6.proyectofacturacion.users.dto.UserSummaryResponse;
+import com.modelosgr86e1eq6.proyectofacturacion.users.entities.Role;
+import com.modelosgr86e1eq6.proyectofacturacion.users.entities.User;
+import com.modelosgr86e1eq6.proyectofacturacion.users.repositories.UserRepository;
+
+import lombok.RequiredArgsConstructor;
  
 @Service
 @RequiredArgsConstructor
@@ -28,10 +30,10 @@ public class UserService {
  
     // ── RF-SEG-08: Listar usuarios ────────────────────────────────────────────
  
-    public Page<UserSummaryResponse> findAll(Role role, Integer branchId,
+    public Page<UserSummaryResponse> findAll(Role role,
                                              Pageable pageable) {
         return userRepository
-                .findByFilters(role, branchId, pageable)
+                .findByFilters(role, pageable)
                 .map(this::toSummary);
     }
  
@@ -56,7 +58,6 @@ public class UserService {
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(Role.EMPLOYEE)
-                .idBranch(request.getBranchId())
                 .isActive(true)
                 .build();
  
@@ -82,7 +83,6 @@ public class UserService {
  
         user.setName(request.getName());
         user.setEmail(request.getEmail());
-        user.setIdBranch(request.getBranchId());
         userRepository.save(user);
  
         auditService.log(AuditService.USER_UPDATED, admin, null, ip,
@@ -142,7 +142,6 @@ public class UserService {
         dto.setName(user.getName());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());
-        dto.setBranchId(user.getIdBranch());
         dto.setActive(user.isActive());
         dto.setCreatedAt(user.getCreatedAt());
         
