@@ -9,13 +9,15 @@ import java.util.Optional;
 /**
  * Repositorio JPA para la entidad {@link Product}.
  *
- * <p>Todos los métodos de consulta filtran por {@code activo = true} para
- * garantizar que el soft delete sea consistente: ningún producto eliminado
- * (RF-05) puede ser leído, actualizado ni validado como si existiera.</p>
+ * <p>Los métodos de consulta declarados explícitamente en esta interfaz usan
+ * {@code activo = true} para respetar la política de soft delete al trabajar
+ * con productos del catálogo.</p>
  *
- * <p>Convención de nombres Spring Data seguida en el proyecto:
- * el sufijo {@code AndActivoTrue} reemplaza el {@code findById} genérico
- * en cualquier operación sobre productos específicos.</p>
+ * <p>Importante: al extender {@link JpaRepository}, siguen existiendo métodos
+ * heredados como {@code findById()} o {@code findAll()} que no aplican ese
+ * filtro automáticamente. Cuando una operación deba ignorar productos
+ * eliminados lógicamente, debe usar los métodos específicos con el sufijo
+ * {@code AndActivoTrue} definidos en este repositorio.</p>
  *
  * @author MrBraro
  */
