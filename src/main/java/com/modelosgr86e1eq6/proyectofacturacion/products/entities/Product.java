@@ -37,12 +37,17 @@ public class Product {
     private Integer idProducto;
 
     /**
-     * Código semántico único del producto (ej. "P001").
+     * Código semántico del producto (ej. "P001").
      * Usado en la búsqueda pública RF-03. El código puede reutilizarse
      * después de un soft delete porque {@code existsByCodigoAndActivoTrue}
      * solo valida contra productos activos.
+     *
+     * <p>No se declara {@code unique = true} a nivel de columna porque eso
+     * impondría unicidad global también sobre registros inactivos. La
+     * unicidad debe aplicarse únicamente a productos activos mediante una
+     * restricción/índice condicional definido en la base de datos.</p>
      */
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String codigo;
 
     /** Nombre descriptivo del producto. */
