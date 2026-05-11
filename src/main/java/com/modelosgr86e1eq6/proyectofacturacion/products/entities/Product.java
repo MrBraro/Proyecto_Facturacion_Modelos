@@ -9,13 +9,13 @@ import java.time.LocalDateTime;
 /**
  * Entidad JPA que representa un producto del catálogo.
  *
- * <p>Implementa soft delete mediante el campo {@code activo}: un producto
- * eliminado (RF-05) conserva su registro en base de datos con {@code activo = false}.
+ * <p>Implementa soft delete mediante el campo {@code isActive}: un producto
+ * eliminado (RF-05) conserva su registro en base de datos con {@code isActive = false}.
  * Todas las queries del repositorio filtran por este campo para mantener
  * consistencia total del soft delete.</p>
  *
  * @author MrBraro
- * @see com.modelosgr86e1eq6.proyectofacturacion.products.repositories.ProductoRepository
+ * @see com.modelosgr86e1eq6.proyectofacturacion.products.repositories.ProductRepository
  */
 @Entity
 @Table(name = "products")
@@ -34,62 +34,62 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_product")
-    private Integer idProducto;
+    private Integer idProduct;
 
     /**
-     * Código semántico del producto (ej. "P001").
-     * Usado en la búsqueda pública RF-03. El código puede reutilizarse
-     * después de un soft delete porque {@code existsByCodigoAndActivoTrue}
-     * solo valida contra productos activos.
-     *
-     * <p>No se declara {@code unique = true} a nivel de columna porque eso
-     * impondría unicidad global también sobre registros inactivos. La
-     * unicidad debe aplicarse únicamente a productos activos mediante una
-     * restricción/índice condicional definido en la base de datos.</p>
-     *
-     *<p>TODO: agregar índice único parcial/condicional en base de datos
-     * para garantizar unicidad únicamente sobre productos activos.</p>
+     * Código semántico único del producto (ej. "P001").
+     * Usado en la búsqueda pública RF-03. Puede reutilizarse tras un soft
+     * delete porque {@code existsByCodeAndIsActiveTrue} solo valida activos.
      */
-    @Column(nullable = false, length = 50)
-    private String codigo;
+    @Column(nullable = false, unique = true, length = 50)
+    private String code;
 
     /** Nombre descriptivo del producto. */
     @Column(nullable = false, length = 150)
-    private String nombre;
+    private String name;
 
     /**
      * Precio unitario del producto.
-     * Se define precisión (10, 2) para evitar errores silenciosos de
-     * redondeo en la capa SQL con dinero.
+     * Precisión (10, 2) para evitar errores silenciosos de redondeo con dinero.
      */
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal precio;
+    private BigDecimal price;
 
     /** Descripción opcional del producto. */
     @Column(columnDefinition = "TEXT")
-    private String descripcion;
+    private String description;
 
     /** Cantidad disponible en inventario. */
     @Column(nullable = false)
     private int stock;
 
     /**
-     * Indicador de estado lógico. {@code false} significa que el producto
-     * fue eliminado (soft delete). Toda operación de lectura y escritura
-     * filtra por este campo para evitar el "zombie corporativo".
+     * Indicador de estado lógico. {@code false} indica que el producto fue
+     * eliminado mediante soft delete (RF-05).
      */
-    @Column(nullable = false)
+    @Column(name = "is_active", nullable = false)
     @Builder.Default
-    private boolean activo = true;
+    private boolean isActive = true;
 
-    /** Fecha y hora de creación del registro, asignada automáticamente. */
+    /** Fecha y hora de creación del registro. */
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    /** Asigna la fecha de creación justo antes de persistir por primera vez. */
+    /**
+     * Fecha y hora de la última modificación del registro.
+     * Permite tener trazabilidad de cambios como actualizaciones de precio
+     * o descripción sin depender del módulo de auditoría.
+     */
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
-}
 
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+}

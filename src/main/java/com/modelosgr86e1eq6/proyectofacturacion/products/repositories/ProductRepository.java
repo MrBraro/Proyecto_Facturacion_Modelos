@@ -1,0 +1,53 @@
+package com.modelosgr86e1eq6.proyectofacturacion.products.repositories;
+
+import com.modelosgr86e1eq6.proyectofacturacion.products.entities.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Repositorio JPA para la entidad {@link Product}.
+ *
+ * <p>Todos los métodos filtran por {@code isActive = true} para garantizar
+ * que el soft delete sea consistente: ningún producto eliminado (RF-05)
+ * puede ser leído, actualizado ni validado como si existiera.</p>
+ *
+ * @author MrBraro
+ */
+public interface ProductRepository extends JpaRepository<Product, Integer> {
+
+    /**
+     * RF-02: Lista todos los productos activos del catálogo.
+     *
+     * @return lista de productos con {@code isActive = true}
+     */
+    List<Product> findAllByIsActiveTrue();
+
+    /**
+     * RF-03: Busca un producto activo por su código semántico.
+     *
+     * @param code código del producto (ej. "P001")
+     * @return {@link Optional} con el producto si existe y está activo
+     */
+    Optional<Product> findByCodeAndIsActiveTrue(String code);
+
+    /**
+     * RF-04 / RF-05 / RF-06: Busca un producto activo por su PK interna.
+     * Impide operar sobre productos eliminados con soft delete.
+     *
+     * @param id PK del producto
+     * @return {@link Optional} con el producto si existe y está activo
+     */
+    Optional<Product> findByIdProductAndIsActiveTrue(Integer id);
+
+    /**
+     * RF-01 / RF-04: Verifica si existe un producto activo con el código dado.
+     * Al filtrar por {@code isActive}, un código liberado por soft delete
+     * puede reutilizarse en un nuevo producto.
+     *
+     * @param code código a verificar
+     * @return {@code true} si existe un producto activo con ese código
+     */
+    boolean existsByCodeAndIsActiveTrue(String code);
+}
