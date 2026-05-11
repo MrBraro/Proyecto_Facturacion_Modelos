@@ -14,7 +14,4 @@ public class UpdateUserRequest {
     @NotBlank(message = "El correo es obligatorio")
     @Email(message = "Formato de correo inválido")
     private String email;
- 
-    // Permite reasignar el empleado a otra sucursal
-    private Integer branchId;
 }

@@ -1,8 +1,10 @@
 package com.modelosgr86e1eq6.proyectofacturacion.users.dto;
 
-import com.modelosgr86e1eq6.proyectofacturacion.users.entities.Role;
-import lombok.Data;
 import java.time.LocalDateTime;
+
+import com.modelosgr86e1eq6.proyectofacturacion.users.entities.Role;
+
+import lombok.Data;
 
  
 /** Vista resumida de usuario para listados */
@@ -12,7 +14,6 @@ public class UserSummaryResponse {
     private String        name;
     private String        email;
     private Role          role;
-    private Integer       branchId;
     private boolean       active;
     private LocalDateTime createdAt;
 }
