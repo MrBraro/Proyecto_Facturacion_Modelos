@@ -46,6 +46,9 @@ public class Product {
      * impondría unicidad global también sobre registros inactivos. La
      * unicidad debe aplicarse únicamente a productos activos mediante una
      * restricción/índice condicional definido en la base de datos.</p>
+     *
+     *<p>TODO: agregar índice único parcial/condicional en base de datos
+     * para garantizar unicidad únicamente sobre productos activos.</p>
      */
     @Column(nullable = false, length = 50)
     private String codigo;
