@@ -11,35 +11,26 @@ import java.math.BigDecimal;
 /**
  * DTO de entrada para el registro de un nuevo producto (RF-01).
  *
- * <p>Las validaciones garantizan que la entidad persista en un estado
- * coherente sin necesidad de validar en la capa de servicio.</p>
- *
  * @author MrBraro
  */
 @Data
-public class CrearProductoRequest {
+public class CreateProductRequest {
 
-    /**
-     * Código semántico único del producto.
-     * Ejemplo: "P001", "LAP-15".
-     */
+    /** Código semántico único del producto (ej. "P001"). */
     @NotBlank(message = "El código del producto es obligatorio")
-    private String codigo;
+    private String code;
 
     /** Nombre descriptivo del producto. */
     @NotBlank(message = "El nombre del producto es obligatorio")
-    private String nombre;
+    private String name;
 
-    /**
-     * Precio unitario. Debe ser un valor positivo.
-     * La capa de persistencia lo almacenará con precisión (10, 2).
-     */
+    /** Precio unitario. Debe ser mayor a cero. */
     @NotNull(message = "El precio es obligatorio")
     @Positive(message = "El precio debe ser mayor a cero")
-    private BigDecimal precio;
+    private BigDecimal price;
 
     /** Descripción opcional del producto. */
-    private String descripcion;
+    private String description;
 
     /**
      * Cantidad inicial en inventario.
