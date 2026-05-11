@@ -5,15 +5,15 @@ services:
     container_name: mi-proyecto-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: midb
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: facturacion_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: cesr1311
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d midb"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d facturacion_db"]
       interval: 10s
       timeout: 5s
       retries: 5
