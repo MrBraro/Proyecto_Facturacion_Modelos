@@ -7,9 +7,6 @@ import org.springframework.stereotype.Component;
 /**
  * Mapper para convertir la entidad {@link Product} al DTO de salida {@link ProductResponse}.
  *
- * <p>Sigue el mismo patrón que {@code AuditMapper}: componente Spring sin
- * dependencias externas, fácilmente testeable de forma unitaria.</p>
- *
  * @author MrBraro
  */
 @Component

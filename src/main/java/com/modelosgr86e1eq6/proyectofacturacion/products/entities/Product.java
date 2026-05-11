@@ -50,9 +50,9 @@ public class Product {
 
     /**
      * Precio unitario del producto.
-     * Precisión (10, 2) para evitar errores silenciosos de redondeo con dinero.
+     * Precisión (12, 2) según esquema SQL.
      */
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
     /** Descripción opcional del producto. */
@@ -61,7 +61,8 @@ public class Product {
 
     /** Cantidad disponible en inventario. */
     @Column(nullable = false)
-    private int stock;
+    @Builder.Default
+    private int stock = 0;
 
     /**
      * Indicador de estado lógico. {@code false} indica que el producto fue
@@ -86,6 +87,7 @@ public class Product {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate

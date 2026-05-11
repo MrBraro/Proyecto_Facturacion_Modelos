@@ -2,6 +2,8 @@ package com.modelosgr86e1eq6.proyectofacturacion.products.repositories;
 
 import com.modelosgr86e1eq6.proyectofacturacion.products.entities.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,22 +20,21 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     /**
-     * RF-02: Lista todos los productos activos del catálogo.
+     * RF-02: Lista todos los productos activos del catálogo con filtros opcionales.
      *
-     * @return lista de productos con {@code isActive = true}
+     * @param name     filtro por nombre (LIKE case-insensitive), puede ser nulo
+     * @param code     filtro por código exacto, puede ser nulo
+     * @return lista de productos activos que coincidan con los filtros
      */
-    List<Product> findAllByIsActiveTrue();
+    @Query("SELECT p FROM Product p WHERE p.isActive = true " +
+           "AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))) " +
+           "AND (:code IS NULL OR p.code = :code)")
+    List<Product> findByFilters(
+            @Param("name") String name,
+            @Param("code") String code);
 
     /**
-     * RF-03: Busca un producto activo por su código semántico.
-     *
-     * @param code código del producto (ej. "P001")
-     * @return {@link Optional} con el producto si existe y está activo
-     */
-    Optional<Product> findByCodeAndIsActiveTrue(String code);
-
-    /**
-     * RF-04 / RF-05 / RF-06: Busca un producto activo por su PK interna.
+     * RF-03: Busca un producto activo por su PK interna.
      * Impide operar sobre productos eliminados con soft delete.
      *
      * @param id PK del producto
@@ -50,4 +51,14 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
      * @return {@code true} si existe un producto activo con ese código
      */
     boolean existsByCodeAndIsActiveTrue(String code);
+
+    /**
+     * RF-06: Obtener alertas de productos.
+     * Retorna productos activos cuyo stock actual está por debajo de un umbral.
+     *
+     * @param threshold umbral de stock (ej. 10)
+     * @return lista de productos con stock crítico
+     */
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.stock <= :threshold")
+    List<Product> findProductsWithLowStock(@Param("threshold") int threshold);
 }

@@ -15,10 +15,10 @@ import java.time.LocalDateTime;
 @Data
 public class ProductResponse {
 
-    /** PK interna del producto. Usada como referencia en PUT y DELETE. */
+    /** PK interna del producto. */
     private Integer id;
 
-    /** Código semántico del producto. Usado en GET /products/{code}. */
+    /** Código semántico del producto. */
     private String code;
 
     /** Nombre descriptivo del producto. */
