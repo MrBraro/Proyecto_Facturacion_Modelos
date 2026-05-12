@@ -27,8 +27,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
      * @return lista de productos activos que coincidan con los filtros
      */
     @Query("SELECT p FROM Product p WHERE p.isActive = true " +
-           "AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))) " +
-           "AND (:code IS NULL OR p.code = :code)")
+           "AND (CAST(:name AS string) IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%'))) " +
+           "AND (CAST(:code AS string) IS NULL OR p.code = CAST(:code AS string))")
     List<Product> findByFilters(
             @Param("name") String name,
             @Param("code") String code);

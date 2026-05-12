@@ -18,7 +18,7 @@ spring:
 
   # ─── BASE DE DATOS POSTGRESQL ──────────────
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/facturacion_db}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/facturacion_db?stringtype=unspecified}
     username: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD:cesr1311}
     driver-class-name: org.postgresql.Driver
