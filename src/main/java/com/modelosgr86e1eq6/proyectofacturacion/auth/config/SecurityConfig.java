@@ -1,10 +1,8 @@
 package com.modelosgr86e1eq6.proyectofacturacion.auth.config;
 
 
-import com.modelosgr86e1eq6.proyectofacturacion.auth.filters.JwtAuthFilter;
-import com.modelosgr86e1eq6.proyectofacturacion.auth.services.UserDetailsServiceImpl;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +18,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+ 
+import java.util.List;
+
+import com.modelosgr86e1eq6.proyectofacturacion.auth.filters.JwtAuthFilter;
+import com.modelosgr86e1eq6.proyectofacturacion.auth.services.UserDetailsServiceImpl;
+
  
 @Configuration
 @EnableWebSecurity
@@ -30,11 +37,23 @@ public class SecurityConfig {
     private final JwtAuthFilter      jwtAuthFilter;
     private final UserDetailsServiceImpl userDetailsService;  // ← impl concreta, no la interfaz
  
+    // En desarrollo: "http://localhost:5500,http://127.0.0.1:5500"
+    // En producción: "https://nuestrodominio.com"
+    // Se define en application.properties → app.cors.allowed-origins
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             // API REST — no necesita CSRF ni sesión HTTP
             .csrf(AbstractHttpConfigurer::disable)
+
+            // CORS debe habilitarse aquí para que Spring Security
+            // lo procese ANTES de evaluar autenticación.
+            // Sin esto, los preflight OPTIONS son bloqueados con 403
+            // antes de llegar al controller.
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
  
@@ -63,6 +82,55 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
  
         return http.build();
+    }
+
+    /**
+     * Configuración CORS centralizada.
+     *
+     * allowedOrigins  → leído desde application.properties, separado por comas.
+     *                   En dev: http://localhost:5500 (Live Server de VS Code)
+     *                   En prod: el dominio real del frontend.
+     *
+     * allowedMethods  → los verbos que usa la API. OPTIONS es obligatorio
+     *                   porque el navegador lo usa para el preflight check.
+     *
+     * allowedHeaders  → Authorization es necesario para enviar el JWT.
+     *                   Content-Type para los POST con JSON.
+     *
+     * exposedHeaders  → permite que el frontend lea Authorization en la respuesta
+     *                   si en algún endpoint se renueva el token.
+     *
+     * allowCredentials → false porque usamos JWT en header, no cookies de sesión.
+     *
+     * maxAge          → el navegador cachea el resultado del preflight 1 hora,
+     *                   reduciendo requests innecesarios.
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+ 
+        // Convertir el string de orígenes separado por comas a lista
+        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+ 
+        config.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+        ));
+ 
+        config.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept"
+        ));
+ 
+        config.setExposedHeaders(List.of("Authorization"));
+ 
+        config.setAllowCredentials(false);
+        config.setMaxAge(3600L);
+ 
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Aplicar esta configuración a todos los endpoints
+        source.registerCorsConfiguration("/api/**", config);
+        return source;
     }
  
     @Bean

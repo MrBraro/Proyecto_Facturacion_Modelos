@@ -2,16 +2,17 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: mi-proyecto-db
+    container_name: facturacion-db
     restart: unless-stopped
     environment:
       POSTGRES_DB: facturacion_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: cesr1311
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/init.sql  # Auto-ejecuta el DDL
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d facturacion_db"]
       interval: 10s
@@ -20,7 +21,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: mi-proyecto-pgadmin
+    container_name: facturacion-pgadmin
     restart: unless-stopped
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@local.dev
