@@ -155,7 +155,6 @@ public class AuthController {
         me.setName(currentUser.getName());
         me.setEmail(currentUser.getEmail());
         me.setRole(currentUser.getRole());
-        me.setBranchId(currentUser.getIdBranch());
         me.setActive(currentUser.isActive());
         return ResponseEntity.ok(ApiResponse.ok(me));
     }

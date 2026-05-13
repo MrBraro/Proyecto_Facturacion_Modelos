@@ -46,12 +46,20 @@ spring:
       enabled: true
     livereload:
       enabled: true
- 
+
+  # ─── CORS ──────────────────────────────────
+  cors:
+    # Orígenes permitidos separados por coma (sin espacios entre ellos)
+    # Dev:  el puerto que use Live Server u otro servidor estático del frontend
+    # Prod: reemplazar con el dominio real
+    allowed-origins: http://localhost:5173,http://127.0.0.1:5173
 
 # ─── APP CUSTOM PROPERTIES ──────────────────
 app:
   jwt:
     secret: ${JWT_SECRET:dev_secret_key_cambiar_en_produccion_minimo_256_bits}
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
 
 # ─── LOGGING ─────────────────────────────────
 logging:
@@ -107,6 +115,8 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET}           # Variable de entorno (requerida)
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:}
 
 logging:
   level:

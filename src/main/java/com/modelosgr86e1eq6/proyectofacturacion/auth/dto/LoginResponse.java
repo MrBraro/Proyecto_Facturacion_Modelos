@@ -9,14 +9,12 @@ public class LoginResponse {
     private String role;
     private String email;
     private String name;
-    private Integer branchId;
  
     public LoginResponse(String token, String role, String email,
-                         String name, Integer branchId) {
+                         String name) {
         this.token    = token;
         this.role     = role;
         this.email    = email;
         this.name     = name;
-        this.branchId = branchId;
     }
 }
