@@ -34,6 +34,7 @@ public class Session {
     private LocalDateTime expiresAt;
  
     @Column(name = "is_active", nullable = false)
+    @Builder.Default
     private boolean isActive = true;
  
     @Column(name = "revoked_at")

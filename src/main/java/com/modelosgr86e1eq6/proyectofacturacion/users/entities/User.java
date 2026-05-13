@@ -38,6 +38,7 @@ public class User implements UserDetails {
     private Role role;
  
     @Column(name = "is_active", nullable = false)
+    @Builder.Default
     private boolean isActive = true;
  
     @Column(name = "password_changed_at")
