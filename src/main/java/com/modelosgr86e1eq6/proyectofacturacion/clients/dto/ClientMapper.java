@@ -8,14 +8,14 @@ public class ClientMapper {
  
     public ClientResponse toResponse(Client client) {
         ClientResponse response = new ClientResponse();
-        response.setIdClient(client.getIdClient().toString());
+        response.setIdClient(client.getIdClient());
         response.setName(client.getName());
         response.setEmail(client.getEmail());
         response.setTelephone(client.getTelephone());
         response.setAddress(client.getAddress());
         response.setActive(client.isActive());
-        response.setCreatedAt(client.getCreatedAt().toString());
-        response.setUpdatedAt(client.getUpdatedAt().toString());
+        response.setCreatedAt(client.getCreatedAt());
+        response.setUpdatedAt(client.getUpdatedAt());
         return response;
     }
  
