@@ -1,0 +1,29 @@
+package com.modelosgr86e1eq6.proyectofacturacion.clients.dto;
+
+ 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+ 
+@Getter
+@Setter
+@NoArgsConstructor
+public class CreateClientRequest {
+ 
+    @NotBlank(message = "El nombre es obligatorio")
+    @Size(max = 120, message = "El nombre no puede superar los 120 caracteres")
+    private String name;
+ 
+    @NotBlank(message = "El correo electrónico es obligatorio")
+    @Email(message = "El correo electrónico no tiene un formato válido")
+    @Size(max = 120, message = "El correo no puede superar los 120 caracteres")
+    private String email;
+ 
+    @Size(max = 20, message = "El teléfono no puede superar los 20 caracteres")
+    private String telephone;
+ 
+    private String address;
+}
