@@ -130,7 +130,18 @@ public class SaleService {
     }
 
     // ── RF-16: Consultar ventas ───────────────────────────────────────────────
-    @Transactional public Page<SaleSummaryResponse> findAll(Integer clientId, SaleStatus estado, LocalDateTime from, LocalDateTime to, Pageable pageable) { return saleRepository .findByFilters(clientId, estado, from, to, pageable) .map(saleMapper::toSummary); }
+    @Transactional(readOnly = true)
+    public Page<SaleSummaryResponse> findAll(
+            Integer clientId,
+            SaleStatus estado,
+            LocalDateTime from,
+            LocalDateTime to,
+            Pageable pageable
+    ) {
+        return saleRepository
+                .findByFilters(clientId, estado, from, to, pageable)
+                .map(saleMapper::toSummary);
+    }
 
     // ── RF-17: Consultar detalle de venta ─────────────────────────────────────
 
