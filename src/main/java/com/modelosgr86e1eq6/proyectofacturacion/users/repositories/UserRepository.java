@@ -26,11 +26,11 @@ public interface UserRepository extends JpaRepository<User, Integer> {
      * Mismo patrón que AuditRepository — consistente en todo el proyecto.
      */
     @Query("""
-        SELECT u FROM User u
-        WHERE (:role     IS NULL OR u.role     = :role)       
-    """)
+    SELECT u FROM User u
+    WHERE (CAST(:role AS string) IS NULL OR u.role = :role)
+""")
     Page<User> findByFilters(
-            @Param("role")     Role    role,
+            @Param("role") Role role,
             Pageable pageable
     );
 }

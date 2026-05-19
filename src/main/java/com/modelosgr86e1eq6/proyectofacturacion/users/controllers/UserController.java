@@ -67,7 +67,7 @@ public class UserController {
     }
  
     // ── PUT /api/v1/users/{id} ─────────────────────────────────────────────────
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<UserSummaryResponse>> update(
             @PathVariable Integer id,
             @Valid @RequestBody UpdateUserRequest request,
