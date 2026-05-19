@@ -108,6 +108,10 @@ public class SaleDetailService {
                     "No se puede eliminar un detalle de una venta que no está abierta");
         }
 
+        var product = detail.getProduct();
+        product.setStock(product.getStock() + detail.getQuantity());
+        productRepository.save(product);
+
         saleDetailRepository.delete(detail);
     }
 
