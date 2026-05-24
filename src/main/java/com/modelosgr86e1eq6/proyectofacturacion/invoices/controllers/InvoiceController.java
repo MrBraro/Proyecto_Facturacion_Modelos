@@ -118,15 +118,21 @@ public class InvoiceController {
      */
     @GetMapping("/{id}/export")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    public ResponseEntity<ApiResponse<Void>> export(
+    public ResponseEntity<byte[]> export(
             @PathVariable Integer id,
             @RequestParam(required = false, defaultValue = "pdf") String format) {
 
-        // TODO: Implement PDF export using InvoiceDirector + PdfInvoiceBuilder.
-        // The Builder pattern is already prepared to support QR and watermark
-        // via addQr() and addWatermark() hooks in the InvoiceBuilder interface.
-        return ResponseEntity
-                .status(501)
-                .body(ApiResponse.error("PDF export not yet implemented"));
+        if (!"pdf".equalsIgnoreCase(format)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        byte[] pdfBytes = invoiceService.exportPdf(id);
+        InvoiceResponse response = invoiceService.findById(id);
+        String fileName = "invoice-" + response.getInvoiceNumber() + ".pdf";
+
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, "application/pdf")
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .body(pdfBytes);
     }
 }
