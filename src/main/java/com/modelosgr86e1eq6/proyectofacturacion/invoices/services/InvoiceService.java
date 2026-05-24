@@ -13,10 +13,18 @@ import com.modelosgr86e1eq6.proyectofacturacion.pattern.builder.invoice.InvoiceD
 import com.modelosgr86e1eq6.proyectofacturacion.pattern.builder.invoice.SimpleInvoiceBuilder;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.entities.Sale;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.repositories.SaleRepository;
+import com.modelosgr86e1eq6.proyectofacturacion.pattern.builder.invoice.DetailedInvoiceBuilder;
+import com.modelosgr86e1eq6.proyectofacturacion.util.pdf.InvoicePdfData;
+import com.modelosgr86e1eq6.proyectofacturacion.util.pdf.PdfGeneratorUtil;
+import com.modelosgr86e1eq6.proyectofacturacion.util.pdf.watermark.StatusWatermarkStrategy;
+import com.modelosgr86e1eq6.proyectofacturacion.util.qr.QrGeneratorUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 
 import java.util.List;
 
@@ -53,6 +61,9 @@ public class InvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final SaleRepository    saleRepository;
     private final InvoiceMapper     invoiceMapper;
+    private final QrGeneratorUtil   qrGeneratorUtil;
+    private final StatusWatermarkStrategy watermarkStrategy;
+    private final PdfGeneratorUtil  pdfGeneratorUtil;
 
     // ── RF-18 / RF-19: Generate invoice ──────────────────────────────────────
 
@@ -123,6 +134,82 @@ public class InvoiceService {
         return invoiceMapper.toResponse(invoice);
     }
 
+    // ── Export PDF ──────────────────────────────────────────────────────────
+
+    /**
+     * Genera o recupera el documento PDF de una factura.
+     *
+     * <p>Reutiliza un PDF previamente generado en disco si está disponible,
+     * optimizando el uso de CPU y almacenamiento.</p>
+     *
+     * @param invoiceId PK de la factura
+     * @return arreglo de bytes del archivo PDF
+     * @throws ResourceNotFoundException si la factura no existe
+     */
+    @Transactional
+    public byte[] exportPdf(Integer invoiceId) {
+        log.info("Exporting PDF for invoice ID: {}", invoiceId);
+        Invoice invoice = invoiceRepository.findByIdWithDetails(invoiceId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Invoice not found with id: " + invoiceId));
+
+        // 1. Reutilizar PDF si ya existe en disco
+        if (invoice.getPdfPath() != null) {
+            Path existingPath = Paths.get(invoice.getPdfPath());
+            if (Files.exists(existingPath)) {
+                try {
+                    log.info("Reusing existing PDF from path: {}", invoice.getPdfPath());
+                    return Files.readAllBytes(existingPath);
+                } catch (java.io.IOException e) {
+                    log.warn("Failed to read existing PDF at {}, regenerating...", invoice.getPdfPath(), e);
+                }
+            }
+        }
+
+        // 2. Si no existe, construir InvoicePdfData
+        Sale sale = invoice.getSale();
+        List<InvoicePdfData.LineItem> items = sale.getDetails().stream()
+                .map(detail -> new InvoicePdfData.LineItem(
+                        detail.getProduct().getCode(),
+                        detail.getProduct().getName(),
+                        detail.getQuantity(),
+                        detail.getUnitPrice(),
+                        detail.getLineTotal()
+                ))
+                .toList();
+
+        InvoicePdfData pdfData = new InvoicePdfData(
+                invoice.getIdInvoice(),
+                invoice.getInvoiceNumber(),
+                invoice.getIssueDate(),
+                invoice.getType(),
+                invoice.getPayStatus(),
+                sale.getClient().getName(),
+                sale.getClient().getEmail(),
+                sale.getClient().getTelephone(),
+                sale.getClient().getAddress(),
+                invoice.getSubtotal(),
+                invoice.getTax(),
+                invoice.getTotal(),
+                items,
+                invoice.isHasQr(),
+                invoice.isHasWatermark(),
+                invoice.getWatermarkText()
+        );
+
+        // 3. Generar PDF
+        byte[] pdfBytes = pdfGeneratorUtil.generateInvoicePdf(pdfData);
+
+        // 4. Guardar en disco
+        String savedPath = pdfGeneratorUtil.savePdfToStorage(invoice.getInvoiceNumber(), pdfBytes);
+
+        // 5. Actualizar entidad
+        invoice.setPdfPath(savedPath);
+        invoiceRepository.save(invoice);
+
+        return pdfBytes;
+    }
+
     // ── Internal helpers ──────────────────────────────────────────────────────
 
     private Sale loadSaleOrThrow(Integer saleId) {
@@ -139,17 +226,11 @@ public class InvoiceService {
 
     /**
      * Selecciona el builder concreto según el tipo de factura solicitado.
-     *
-     * <p>Este punto de extensión centraliza la decisión de qué builder usar.
-     * Al añadir un nuevo tipo (ej. {@code ELECTRONIC}), solo hay que agregar
-     * un caso aquí y crear la implementación correspondiente de
-     * {@link InvoiceBuilder}.</p>
      */
     private InvoiceBuilder resolveBuilder(InvoiceType type, Sale sale) {
         return switch (type) {
             case SIMPLE   -> new SimpleInvoiceBuilder(sale);
-            case DETAILED -> new SimpleInvoiceBuilder(sale);
-            // Future: case DETAILED -> new DetailedInvoiceBuilder(sale, qrService, watermarkService);
+            case DETAILED -> new DetailedInvoiceBuilder(sale, qrGeneratorUtil, watermarkStrategy);
         };
     }
 

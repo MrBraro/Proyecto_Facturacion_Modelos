@@ -65,11 +65,7 @@ public class SimpleInvoiceBuilder implements InvoiceBuilder {
      */
     @Override
     public InvoiceBuilder addHeader() {
-        invoiceBuilder
-                .sale(sale)
-                .issueDate(LocalDate.now())
-                .type(InvoiceType.SIMPLE)
-                .payStatus(InvoicePayStatus.PENDING);
+        InvoiceBuilderSupport.applyHeader(invoiceBuilder, sale, InvoiceType.SIMPLE);
         return this;
     }
 
@@ -96,10 +92,7 @@ public class SimpleInvoiceBuilder implements InvoiceBuilder {
      */
     @Override
     public InvoiceBuilder addTotal() {
-        invoiceBuilder
-                .subtotal(sale.getSubtotal())
-                .tax(sale.getTax())
-                .total(sale.getTotal());
+        InvoiceBuilderSupport.applyTotal(invoiceBuilder, sale);
         return this;
     }
 
