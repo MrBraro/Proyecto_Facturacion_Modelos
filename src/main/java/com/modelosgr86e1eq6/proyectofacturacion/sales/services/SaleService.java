@@ -23,8 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-//El service contiene la lógica real de negocio. El comando solo lo referencia y lo llama:
-
 @Service
 @RequiredArgsConstructor
 public class SaleService {
@@ -36,7 +34,7 @@ public class SaleService {
     private final ProductRepository    productRepository;
     private final SaleMapper           saleMapper;
 
-    // ── RF-12: Crear venta ────────────────────────────────────────────────────
+    // ── RF-12: Create sale ────────────────────────────────────────────────────
 
     @Transactional
     public SaleDetailResponse create(CreateSaleRequest request) {
@@ -66,7 +64,7 @@ public class SaleService {
         return saleMapper.toDetail(saved, List.of());
     }
 
-    // ── RF-14: Confirmar venta ────────────────────────────────────────────────
+    // ── RF-14: Confirm sale ───────────────────────────────────────────────────
 
     @Transactional
     public SaleDetailResponse confirmSale(Integer id) {
@@ -101,10 +99,18 @@ public class SaleService {
         return saleMapper.toDetail(saved, details);
     }
 
-    // ── RF-16: Consultar ventas ───────────────────────────────────────────────
-    @Transactional(readOnly = true) public Page<SaleSummaryResponse> findAll(Integer clientId, SaleStatus estado, LocalDateTime from, LocalDateTime to, Pageable pageable) { return saleRepository .findByFilters(clientId, estado, from, to, pageable) .map(saleMapper::toSummary); }
+    // ── RF-16: List sales ─────────────────────────────────────────────────────
 
-    // ── RF-17: Consultar detalle de venta ─────────────────────────────────────
+    @Transactional(readOnly = true)
+    public Page<SaleSummaryResponse> findAll(Integer clientId, SaleStatus status,
+                                             LocalDateTime from, LocalDateTime to,
+                                             Pageable pageable) {
+        return saleRepository
+                .findByFilters(clientId, status, from, to, pageable)
+                .map(saleMapper::toSummary);
+    }
+
+    // ── RF-17: Sale detail ────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
     public SaleDetailResponse findById(Integer id) {
@@ -112,7 +118,7 @@ public class SaleService {
         return saleMapper.toDetail(sale, saleDetailRepository.findBySaleId(id));
     }
 
-    // ── Anular venta ───────────────────────────────────────────────────
+    // ── RF-18: Cancel sale ────────────────────────────────────────────────────
 
     @Transactional
     public SaleDetailResponse cancelSale(Integer id) {
@@ -144,11 +150,11 @@ public class SaleService {
         return saleMapper.toDetail(saved, details);
     }
 
-    // ── Interno ───────────────────────────────────────────────────────────────
+    // ── Internal ──────────────────────────────────────────────────────────────
 
     private Sale getOrThrow(Integer id) {
         return saleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Venta no encontrada con id: " + id));
+                        "Sale not found with id: " + id));
     }
 }
