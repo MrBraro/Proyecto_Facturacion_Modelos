@@ -55,7 +55,7 @@ public class ClientController {
     }
  
     // ── RF-10: Actualizar cliente ─────────────────────────────────────────
-    @PutMapping("/{idClient}")
+    @PatchMapping("/{idClient}")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity<ApiResponse<ClientResponse>> update(
             @PathVariable Integer idClient,
