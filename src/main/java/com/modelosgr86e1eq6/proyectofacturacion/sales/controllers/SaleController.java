@@ -1,14 +1,10 @@
 package com.modelosgr86e1eq6.proyectofacturacion.sales.controllers;
 
 import com.modelosgr86e1eq6.proyectofacturacion.common.dto.ApiResponse;
-import com.modelosgr86e1eq6.proyectofacturacion.sales.dto.CreateSaleDetailRequest;
-import com.modelosgr86e1eq6.proyectofacturacion.sales.dto.SaleItemResponse;
-import com.modelosgr86e1eq6.proyectofacturacion.sales.dto.UpdateSaleDetailRequest;
-import com.modelosgr86e1eq6.proyectofacturacion.sales.services.SaleDetailService;
-import com.modelosgr86e1eq6.proyectofacturacion.sales.dto.SaleDetailResponse;
-import com.modelosgr86e1eq6.proyectofacturacion.sales.dto.CreateSaleRequest;
-import com.modelosgr86e1eq6.proyectofacturacion.sales.dto.SaleSummaryResponse;
+import com.modelosgr86e1eq6.proyectofacturacion.sales.commands.*;
+import com.modelosgr86e1eq6.proyectofacturacion.sales.dto.*;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.entities.SaleStatus;
+import com.modelosgr86e1eq6.proyectofacturacion.sales.services.SaleDetailService;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.services.SaleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
+//El controller recibe la solicitud HTTP, crea el comando con los datos necesarios y lo ejecuta. No sabe cómo se procesa, solo dispara:
+
 @RestController
 @RequestMapping("/api/v1/sales")
 @RequiredArgsConstructor
@@ -31,58 +29,56 @@ public class SaleController {
     private final SaleService       saleService;
     private final SaleDetailService saleDetailService;
 
-    // ── RF-12: Crear venta POST http://localhost:8082/api/v1/sales ────────────────────────────────────────────────────
+    // ── RF-12: Create sale ────────────────────────────────────────────────────
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity<ApiResponse<SaleDetailResponse>> create(
             @Valid @RequestBody CreateSaleRequest request) {
 
-        SaleDetailResponse response = saleService.create(request);
+        SaleDetailResponse response = new CreateSaleCommand(saleService, request).execute();
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ApiResponse.ok("Venta registrada exitosamente", response));
+                .body(ApiResponse.ok("Sale created successfully", response));
     }
 
-    // ── RF-13: Agregar productos a una venta POST http://localhost:8082/api/v1/sales/{id}/products ──────────────────────────────────
+    // ── RF-13 + RF-15: Add product to sale ────────────────────────────────────
     @PostMapping("/{id}/products")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity<ApiResponse<SaleItemResponse>> addProduct(
             @PathVariable Integer id,
             @Valid @RequestBody CreateSaleDetailRequest request) {
 
-        request.setSaleId(id);
-        SaleItemResponse response = saleDetailService.addDetail(request);
+        SaleItemResponse response = new AddProductCommand(saleDetailService, id, request).execute();
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ApiResponse.ok("Producto agregado exitosamente", response));
+                .body(ApiResponse.ok("Product added successfully", response));
     }
 
-    // ── RF-14: Calcular total de venta PUT http://localhost:8082/api/v1/sales/{id}/confirm ────────────────────────────────────────
-    // ── RF-15: Actualizar inventario ──────────────────────────────────────────
+    // ── RF-14: Confirm sale ───────────────────────────────────────────────────
     @PutMapping("/{id}/confirm")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity<ApiResponse<SaleDetailResponse>> confirm(
             @PathVariable Integer id) {
 
-        SaleDetailResponse response = saleService.confirmSale(id);
-        return ResponseEntity.ok(ApiResponse.ok("Venta confirmada exitosamente", response));
+        SaleDetailResponse response = new ConfirmSaleCommand(saleService, id).execute();
+        return ResponseEntity.ok(ApiResponse.ok("Sale confirmed successfully", response));
     }
 
-    // ── RF-16: Consultar ventas GET http://localhost:8082/api/v1/sales?page=0&size=10 ───────────────────────────────────────────────
+    // ── RF-16: List sales ─────────────────────────────────────────────────────
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity<ApiResponse<Page<SaleSummaryResponse>>> findAll(
             @RequestParam(required = false) Integer clientId,
-            @RequestParam(required = false) SaleStatus estado,
+            @RequestParam(required = false) SaleStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
             @PageableDefault(size = 10, sort = "saleDate") Pageable pageable) {
 
-        Page<SaleSummaryResponse> page = saleService.findAll(clientId, estado, from, to, pageable);
+        Page<SaleSummaryResponse> page = saleService.findAll(clientId, status, from, to, pageable);
         return ResponseEntity.ok(ApiResponse.ok(page));
     }
 
-    // ── RF-17: Consultar detalle de venta GET http://localhost:8082/api/v1/sales/{id} ─────────────────────────────────────
+    // ── RF-17: Sale detail ────────────────────────────────────────────────────
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity<ApiResponse<SaleDetailResponse>> findById(
@@ -92,36 +88,38 @@ public class SaleController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    // ── Anular venta PATCH http://localhost:8082/api/v1/sales/{id}/cancel ───────────────────────────────────────────────────
+    // ── RF-18: Cancel sale ────────────────────────────────────────────────────
     @PatchMapping("/{id}/cancel")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity<ApiResponse<SaleDetailResponse>> cancel(
             @PathVariable Integer id) {
 
-        SaleDetailResponse response = saleService.cancelSale(id);
-        return ResponseEntity.ok(ApiResponse.ok("Venta anulada exitosamente", response));
+        SaleDetailResponse response = new CancelSaleCommand(saleService, id).execute();
+        return ResponseEntity.ok(ApiResponse.ok("Sale cancelled successfully", response));
     }
 
-    // ── Actualizar cantidad de producto PATCH http://localhost:8082/api/v1/sales/{id}/products/{detailId} ────────────────────────────────
+    // ── RF-19: Update product quantity ────────────────────────────────────────
     @PatchMapping("/{id}/products/{detailId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @SuppressWarnings("unused")
     public ResponseEntity<ApiResponse<SaleItemResponse>> updateProduct(
             @PathVariable Integer id,
             @PathVariable Integer detailId,
             @Valid @RequestBody UpdateSaleDetailRequest request) {
 
-        SaleItemResponse response = saleDetailService.updateDetail(detailId, request);
-        return ResponseEntity.ok(ApiResponse.ok("Producto actualizado exitosamente", response));
+        SaleItemResponse response = new UpdateProductCommand(saleDetailService, detailId, request).execute();
+        return ResponseEntity.ok(ApiResponse.ok("Product updated successfully", response));
     }
 
-    // ── Eliminar producto de venta DELETE http://localhost:8082/api/v1/sales/{saleId}/details/{detailId} ─────────────────────────────────────
-    @DeleteMapping("/{saleId}/details/{detailId}")
+    // ── RF-20: Delete product from sale ──────────────────────────────────────
+    @DeleteMapping("/{id}/products/{detailId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @SuppressWarnings("unused")
     public ResponseEntity<ApiResponse<Void>> deleteProduct(
-            @PathVariable Integer saleId,
+            @PathVariable Integer id,
             @PathVariable Integer detailId) {
 
-        saleDetailService.deleteDetail(detailId);
-        return ResponseEntity.ok(ApiResponse.ok("Producto eliminado exitosamente"));
+        new RemoveProductCommand(saleDetailService, detailId).execute();
+        return ResponseEntity.ok(ApiResponse.ok("Product removed successfully"));
     }
 }

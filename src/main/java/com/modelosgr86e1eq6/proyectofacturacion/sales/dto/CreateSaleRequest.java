@@ -9,7 +9,4 @@ public class CreateSaleRequest {
 
     @NotNull(message = "El ID del cliente es obligatorio")
     private Integer clientId;
-
-    @NotNull(message = "El ID del usuario es obligatorio")
-    private Integer userId;
 }

@@ -26,27 +26,30 @@ public class SaleDetailService {
     private final ProductRepository    productRepository;
     private final SaleDetailMapper     saleDetailMapper;
 
-    // ── RF-13: Agregar producto a venta ───────────────────────────────────────
+    // ── RF-13: Add product to sale ────────────────────────────────────────────
 
     @Transactional
-    public SaleItemResponse addDetail(CreateSaleDetailRequest request) {
-        var sale = saleRepository.findById(request.getSaleId())
+    public SaleItemResponse addDetail(Integer saleId, CreateSaleDetailRequest request) {
+        var sale = saleRepository.findById(saleId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Venta no encontrada con id: " + request.getSaleId()));
+                        "Sale not found with id: " + saleId));
 
         if (sale.getState() != SaleStatus.ABIERTA) {
             throw new BusinessException(
-                    "La venta con id " + request.getSaleId() + " no está abierta. Estado actual: " + sale.getState());
+                    "Sale with id " + saleId +
+                            " is not open. Current status: " + sale.getState());
         }
 
         var product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Producto no encontrado con id: " + request.getProductId()));
+                        "Product not found with id: " + request.getProductId()));
 
+        // Solo validamos que haya stock suficiente, no lo descontamos aún
         if (product.getStock() < request.getQuantity()) {
             throw new BusinessException(
-                    "Stock insuficiente para el producto " + product.getName() +
-                            ". Disponible: " + product.getStock() + ", solicitado: " + request.getQuantity());
+                    "Insufficient stock for product " + product.getName() +
+                            ". Available: " + product.getStock() +
+                            ", requested: " + request.getQuantity());
         }
 
         BigDecimal lineSubtotal = product.getPrice()
@@ -60,13 +63,10 @@ public class SaleDetailService {
                 .lineSubtotal(lineSubtotal)
                 .build();
 
-        product.setStock(product.getStock() - request.getQuantity());
-        productRepository.save(product);
-
         return saleDetailMapper.toResponse(saleDetailRepository.save(detail));
     }
 
-    // ── Actualizar cantidad de producto ────────────────────────────────
+    // ── RF-19: Update product quantity ────────────────────────────────────────
 
     @Transactional
     public SaleItemResponse updateDetail(Integer detailId, UpdateSaleDetailRequest request) {
@@ -74,20 +74,18 @@ public class SaleDetailService {
 
         if (detail.getSale().getState() != SaleStatus.ABIERTA) {
             throw new BusinessException(
-                    "No se puede modificar un detalle de una venta que no está abierta");
+                    "Cannot modify a detail from a sale that is not open");
         }
 
         var product = detail.getProduct();
-        int diferencia = request.getQuantity() - detail.getQuantity();
 
-        if (diferencia > 0 && product.getStock() < diferencia) {
+        // Solo validamos stock para la cantidad nueva, no tocamos el stock
+        if (product.getStock() < request.getQuantity()) {
             throw new BusinessException(
-                    "Stock insuficiente para el producto " + product.getName() +
-                            ". Disponible: " + product.getStock() + ", adicional solicitado: " + diferencia);
+                    "Insufficient stock for product " + product.getName() +
+                            ". Available: " + product.getStock() +
+                            ", requested: " + request.getQuantity());
         }
-
-        product.setStock(product.getStock() - diferencia);
-        productRepository.save(product);
 
         detail.setQuantity(request.getQuantity());
         detail.setLineSubtotal(detail.getUnitPrice()
@@ -96,26 +94,26 @@ public class SaleDetailService {
         return saleDetailMapper.toResponse(saleDetailRepository.save(detail));
     }
 
-    // ── Eliminar producto de venta ─────────────────────────────────────
+    // ── RF-20: Delete product from sale ──────────────────────────────────────
 
     @Transactional
     public void deleteDetail(Integer id) {
-
         SaleDetail detail = getOrThrow(id);
 
         if (detail.getSale().getState() != SaleStatus.ABIERTA) {
             throw new BusinessException(
-                    "No se puede eliminar un detalle de una venta que no está abierta");
+                    "Cannot delete a detail from a sale that is not open");
         }
 
+        // Solo eliminamos el detalle, el stock no se tocó aún
         saleDetailRepository.delete(detail);
     }
 
-    // ── Interno ───────────────────────────────────────────────────────────────
+    // ── Internal ──────────────────────────────────────────────────────────────
 
     private SaleDetail getOrThrow(Integer id) {
         return saleDetailRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Detalle de venta no encontrado con id: " + id));
+                        "Sale detail not found with id: " + id));
     }
 }
