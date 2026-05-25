@@ -16,12 +16,14 @@ import com.modelosgr86e1eq6.proyectofacturacion.users.repositories.UserRepositor
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+
+//El service contiene la lógica real de negocio. El comando solo lo referencia y lo llama:
 
 @Service
 @RequiredArgsConstructor
@@ -40,15 +42,20 @@ public class SaleService {
     public SaleDetailResponse create(CreateSaleRequest request) {
         var client = clientRepository.findById(request.getClientId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Cliente no encontrado con id: " + request.getClientId()));
-
-        var user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Usuario no encontrado con id: " + request.getUserId()));
+                        "Client not found with id: " + request.getClientId()));
 
         if (!client.isActive()) {
-            throw new BusinessException("El cliente no se encuentra activo");
+            throw new BusinessException("Client is not active");
         }
+
+        // Obtener usuario autenticado del contexto de seguridad
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        var user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Authenticated user not found: " + email));
 
         Sale sale = Sale.builder()
                 .client(client)
@@ -63,74 +70,39 @@ public class SaleService {
 
     @Transactional
     public SaleDetailResponse confirmSale(Integer id) {
-
         Sale sale = getOrThrow(id);
 
-        // ── Validar estado ───────────────────────────────────────
         if (sale.getState() != SaleStatus.ABIERTA) {
             throw new BusinessException(
-                    "La venta con id " + id +
-                            " no puede confirmarse. Estado actual: " +
-                            sale.getState());
+                    "Sale with id " + id + " cannot be confirmed. Current status: " + sale.getState());
         }
 
-        // ── Obtener detalles ────────────────────────────────────
         var details = saleDetailRepository.findBySaleId(id);
 
         if (details.isEmpty()) {
-            throw new BusinessException(
-                    "No se puede confirmar una venta sin productos");
+            throw new BusinessException("Cannot confirm a sale with no products");
         }
 
-        // ── Validar stock ───────────────────────────────────────
+        // Descontar stock al confirmar
         details.forEach(detail -> {
-
             var product = detail.getProduct();
-
             if (product.getStock() < detail.getQuantity()) {
                 throw new BusinessException(
-                        "Stock insuficiente para el producto: "
-                                + product.getName());
+                        "Insufficient stock for product " + product.getName() +
+                                ". Available: " + product.getStock() +
+                                ", required: " + detail.getQuantity());
             }
-        });
-
-        // ── Calcular subtotal ───────────────────────────────────
-        double subtotal = details.stream()
-                .mapToDouble(detail ->
-                        detail.getQuantity() *
-                                detail.getUnitPrice().doubleValue())
-                .sum();
-
-        // ── Calcular IVA y total ────────────────────────────────
-        double iva = subtotal * 0.19;
-        double total = subtotal + iva;
-
-        // ── Asignar valores a la venta ──────────────────────────
-        sale.setSubtotal(BigDecimal.valueOf(subtotal));
-        sale.setIva(BigDecimal.valueOf(iva));
-        sale.setTotal(BigDecimal.valueOf(total));
-
-        // ── Actualizar inventario ───────────────────────────────
-        details.forEach(detail -> {
-
-            var product = detail.getProduct();
-
-            product.setStock(
-                    product.getStock() - detail.getQuantity());
-
+            product.setStock(product.getStock() - detail.getQuantity());
             productRepository.save(product);
         });
 
-        // ── Confirmar venta ─────────────────────────────────────
         sale.setState(SaleStatus.CERRADA);
-
         Sale saved = saleRepository.save(sale);
-
         return saleMapper.toDetail(saved, details);
     }
 
     // ── RF-16: Consultar ventas ───────────────────────────────────────────────
-    @Transactional public Page<SaleSummaryResponse> findAll(Integer clientId, SaleStatus estado, LocalDateTime from, LocalDateTime to, Pageable pageable) { return saleRepository .findByFilters(clientId, estado, from, to, pageable) .map(saleMapper::toSummary); }
+    @Transactional(readOnly = true) public Page<SaleSummaryResponse> findAll(Integer clientId, SaleStatus estado, LocalDateTime from, LocalDateTime to, Pageable pageable) { return saleRepository .findByFilters(clientId, estado, from, to, pageable) .map(saleMapper::toSummary); }
 
     // ── RF-17: Consultar detalle de venta ─────────────────────────────────────
 
@@ -148,19 +120,24 @@ public class SaleService {
 
         if (sale.getState() == SaleStatus.CERRADA) {
             throw new BusinessException(
-                    "La venta con id " + id + " ya está cerrada y no puede anularse");
+                    "Sale with id " + id + " is already closed");
         }
 
         if (sale.getState() == SaleStatus.ANULADA) {
-            throw new BusinessException("La venta con id " + id + " ya está anulada");
+            throw new BusinessException(
+                    "Sale with id " + id + " is already cancelled");
         }
 
         var details = saleDetailRepository.findBySaleId(id);
-        details.forEach(detail -> {
-            var product = detail.getProduct();
-            product.setStock(product.getStock() + detail.getQuantity());
-            productRepository.save(product);
-        });
+
+        // Solo reintegrar stock si la venta fue confirmada antes de anularse
+        if (sale.getState() == SaleStatus.CERRADA) {
+            details.forEach(detail -> {
+                var product = detail.getProduct();
+                product.setStock(product.getStock() + detail.getQuantity());
+                productRepository.save(product);
+            });
+        }
 
         sale.setState(SaleStatus.ANULADA);
         Sale saved = saleRepository.save(sale);

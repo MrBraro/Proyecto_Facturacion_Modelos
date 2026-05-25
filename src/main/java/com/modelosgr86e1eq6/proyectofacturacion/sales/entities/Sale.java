@@ -11,9 +11,6 @@ import java.time.LocalDateTime;
 
 /**
  * <p>Una venta está asociada a un {@link Client} y a un {@link User} que la registra.
- * Los totales (subtotal, iva, total) son recalculados automáticamente por el trigger
- * {@code trg_recalcular_venta} en base de datos cada vez que se modifican los
- * {@code SaleDetail} asociados.</p>
  */
 @Entity
 @Table(name = "ventas")
