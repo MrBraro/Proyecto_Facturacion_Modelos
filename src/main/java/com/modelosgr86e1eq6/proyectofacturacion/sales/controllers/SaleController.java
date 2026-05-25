@@ -72,7 +72,7 @@ public class SaleController {
             @RequestParam(required = false) SaleStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
-            @PageableDefault(size = 10, sort = "saleDate") Pageable pageable) {
+            @PageableDefault(sort = "saleDate") Pageable pageable) {
 
         Page<SaleSummaryResponse> page = saleService.findAll(clientId, status, from, to, pageable);
         return ResponseEntity.ok(ApiResponse.ok(page));
