@@ -8,15 +8,17 @@ import com.modelosgr86e1eq6.proyectofacturacion.invoices.entities.InvoiceType;
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.exceptions.InvoiceAlreadyExistsException;
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.mappers.InvoiceMapper;
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.repositories.InvoiceRepository;
-import com.modelosgr86e1eq6.proyectofacturacion.pattern.builder.invoice.InvoiceBuilder;
-import com.modelosgr86e1eq6.proyectofacturacion.pattern.builder.invoice.InvoiceDirector;
-import com.modelosgr86e1eq6.proyectofacturacion.pattern.builder.invoice.SimpleInvoiceBuilder;
+import com.modelosgr86e1eq6.proyectofacturacion.invoices.Builder.InvoiceBuilder;
+import com.modelosgr86e1eq6.proyectofacturacion.invoices.Builder.InvoiceDirector;
+import com.modelosgr86e1eq6.proyectofacturacion.invoices.Builder.SimpleInvoiceBuilder;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.entities.Sale;
+import com.modelosgr86e1eq6.proyectofacturacion.sales.entities.SaleDetail;
+import com.modelosgr86e1eq6.proyectofacturacion.sales.repositories.SaleDetailRepository;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.repositories.SaleRepository;
-import com.modelosgr86e1eq6.proyectofacturacion.pattern.builder.invoice.DetailedInvoiceBuilder;
+import com.modelosgr86e1eq6.proyectofacturacion.invoices.Builder.DetailedInvoiceBuilder;
 import com.modelosgr86e1eq6.proyectofacturacion.util.pdf.InvoicePdfData;
 import com.modelosgr86e1eq6.proyectofacturacion.util.pdf.PdfGeneratorUtil;
-import com.modelosgr86e1eq6.proyectofacturacion.util.pdf.watermark.StatusWatermarkStrategy;
+import com.modelosgr86e1eq6.proyectofacturacion.invoices.Strategy.StatusWatermarkStrategy;
 import com.modelosgr86e1eq6.proyectofacturacion.util.qr.QrGeneratorUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +66,7 @@ public class InvoiceService {
     private final QrGeneratorUtil   qrGeneratorUtil;
     private final StatusWatermarkStrategy watermarkStrategy;
     private final PdfGeneratorUtil  pdfGeneratorUtil;
+    private final SaleDetailRepository saleDetailRepository;
 
     // ── RF-18 / RF-19: Generate invoice ──────────────────────────────────────
 
@@ -98,7 +101,7 @@ public class InvoiceService {
         invoiceRepository.save(invoice);
 
         log.info("Invoice created successfully for sale ID: {}", request.getSaleId());
-        return invoiceMapper.toResponse(invoice);
+        return invoiceMapper.toResponse(invoice, saleDetailRepository.findBySaleId(request.getSaleId()));
     }
 
     // ── List invoices ─────────────────────────────────────────────────────────
@@ -112,10 +115,9 @@ public class InvoiceService {
     public List<InvoiceResponse> findAll() {
         return invoiceRepository.findAllWithSaleAndClient()
                 .stream()
-                .map(invoiceMapper::toResponse)
+                .map(i -> invoiceMapper.toResponse(i, saleDetailRepository.findBySaleId(i.getSale().getId())))
                 .toList();
-    }
-
+}
     // ── Find invoice by ID ────────────────────────────────────────────────────
 
     /**
@@ -131,7 +133,7 @@ public class InvoiceService {
         Invoice invoice = invoiceRepository.findByIdWithDetails(invoiceId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Invoice not found with id: " + invoiceId));
-        return invoiceMapper.toResponse(invoice);
+            return invoiceMapper.toResponse(invoice, saleDetailRepository.findBySaleId(invoice.getSale().getId()));
     }
 
     // ── Export PDF ──────────────────────────────────────────────────────────
@@ -168,13 +170,15 @@ public class InvoiceService {
 
         // 2. Si no existe, construir InvoicePdfData
         Sale sale = invoice.getSale();
-        List<InvoicePdfData.LineItem> items = sale.getDetails().stream()
+        List<SaleDetail> details = saleDetailRepository.findBySaleId(sale.getId());
+
+        List<InvoicePdfData.LineItem> items = details.stream()
                 .map(detail -> new InvoicePdfData.LineItem(
                         detail.getProduct().getCode(),
                         detail.getProduct().getName(),
                         detail.getQuantity(),
                         detail.getUnitPrice(),
-                        detail.getLineTotal()
+                        detail.getLineSubtotal()
                 ))
                 .toList();
 
@@ -213,16 +217,17 @@ public class InvoiceService {
     // ── Internal helpers ──────────────────────────────────────────────────────
 
     private Sale loadSaleOrThrow(Integer saleId) {
-        return saleRepository.findByIdWithDetails(saleId)
+        return saleRepository.findById(saleId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Sale not found with id: " + saleId));
     }
 
     private void validateNoDuplicateInvoice(Integer saleId) {
-        if (invoiceRepository.existsBySale_IdSale(saleId)) {
+        if (invoiceRepository.existsBySale_Id(saleId)) {
             throw new InvoiceAlreadyExistsException(saleId);
         }
     }
+
 
     /**
      * Selecciona el builder concreto según el tipo de factura solicitado.

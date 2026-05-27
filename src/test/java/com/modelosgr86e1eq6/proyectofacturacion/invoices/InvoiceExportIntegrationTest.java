@@ -15,6 +15,7 @@ import com.modelosgr86e1eq6.proyectofacturacion.products.entities.Product;
 import com.modelosgr86e1eq6.proyectofacturacion.products.repositories.ProductRepository;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.entities.Sale;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.entities.SaleDetail;
+import com.modelosgr86e1eq6.proyectofacturacion.sales.repositories.SaleDetailRepository;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.repositories.SaleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,6 @@ import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -71,6 +71,8 @@ class InvoiceExportIntegrationTest {
     private Client savedClient;
     private Product savedProduct;
     private Sale savedSale;
+    @Autowired
+    private SaleDetailRepository saleDetailRepository;
 
     @BeforeEach
     void setUp() {
@@ -114,7 +116,7 @@ class InvoiceExportIntegrationTest {
         Sale sale = Sale.builder()
                 .client(savedClient)
                 .subtotal(new BigDecimal("100.00"))
-                .tax(new BigDecimal("19.00"))
+                .iva(new BigDecimal("19.00"))
                 .total(new BigDecimal("119.00"))
                 .build();
 
@@ -123,10 +125,10 @@ class InvoiceExportIntegrationTest {
                 .product(savedProduct)
                 .quantity(2)
                 .unitPrice(new BigDecimal("50.00"))
-                .lineTotal(new BigDecimal("100.00"))
+                .lineSubtotal(new BigDecimal("100.00"))
                 .build();
 
-        sale.setDetails(List.of(detail));
+        saleDetailRepository.save(detail);
         savedSale = saleRepository.save(sale);
     }
 
@@ -134,7 +136,7 @@ class InvoiceExportIntegrationTest {
     void testCompleteInvoiceGenerationAndExportFlow() throws Exception {
         // --- STEP 1: Generate a Detailed Invoice ---
         CreateInvoiceRequest createRequest = new CreateInvoiceRequest();
-        createRequest.setSaleId(savedSale.getIdSale());
+        createRequest.setSaleId(savedSale.getId());
         createRequest.setType(InvoiceType.DETAILED);
 
         InvoiceResponse invoiceResponse = invoiceService.create(createRequest);

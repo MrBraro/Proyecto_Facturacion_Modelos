@@ -1,10 +1,10 @@
-package com.modelosgr86e1eq6.proyectofacturacion.pattern.builder.invoice;
+package com.modelosgr86e1eq6.proyectofacturacion.invoices.Builder;
 
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.entities.Invoice;
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.entities.InvoicePayStatus;
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.entities.InvoiceType;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.entities.Sale;
-import com.modelosgr86e1eq6.proyectofacturacion.util.pdf.watermark.WatermarkStrategy;
+import com.modelosgr86e1eq6.proyectofacturacion.invoices.Strategy.WatermarkStrategy;
 import com.modelosgr86e1eq6.proyectofacturacion.util.qr.QrGeneratorUtil;
 
 /**

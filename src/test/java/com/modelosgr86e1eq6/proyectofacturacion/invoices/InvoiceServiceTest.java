@@ -11,9 +11,10 @@ import com.modelosgr86e1eq6.proyectofacturacion.invoices.mappers.InvoiceMapper;
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.repositories.InvoiceRepository;
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.services.InvoiceService;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.entities.Sale;
+import com.modelosgr86e1eq6.proyectofacturacion.sales.repositories.SaleDetailRepository;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.repositories.SaleRepository;
 import com.modelosgr86e1eq6.proyectofacturacion.util.pdf.PdfGeneratorUtil;
-import com.modelosgr86e1eq6.proyectofacturacion.util.pdf.watermark.StatusWatermarkStrategy;
+import com.modelosgr86e1eq6.proyectofacturacion.invoices.Strategy.StatusWatermarkStrategy;
 import com.modelosgr86e1eq6.proyectofacturacion.util.qr.QrGeneratorUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,6 +47,9 @@ class InvoiceServiceTest {
     private SaleRepository saleRepository;
 
     @Mock
+    private SaleDetailRepository saleDetailRepository;
+
+    @Mock
     private InvoiceMapper invoiceMapper;
 
     @Mock
@@ -64,9 +69,9 @@ class InvoiceServiceTest {
     @BeforeEach
     void setUp() {
         sampleSale = Sale.builder()
-                .idSale(100)
+                .id(100)
                 .subtotal(new BigDecimal("100.00"))
-                .tax(new BigDecimal("19.00"))
+                .iva(new BigDecimal("19.00"))
                 .total(new BigDecimal("119.00"))
                 .build();
     }
@@ -78,8 +83,9 @@ class InvoiceServiceTest {
         request.setSaleId(100);
         request.setType(InvoiceType.SIMPLE);
 
-        when(saleRepository.findByIdWithDetails(100)).thenReturn(Optional.of(sampleSale));
-        when(invoiceRepository.existsBySale_IdSale(100)).thenReturn(false);
+        when(saleRepository.findById(100)).thenReturn(Optional.of(sampleSale));
+        when(invoiceRepository.existsBySale_Id(100)).thenReturn(false);
+        when(saleDetailRepository.findBySaleId(100)).thenReturn(List.of());
 
         InvoiceResponse responseDto = new InvoiceResponse();
         responseDto.setId(1);
@@ -88,7 +94,7 @@ class InvoiceServiceTest {
         responseDto.setHasQr(false);
         responseDto.setHasWatermark(false);
 
-        when(invoiceMapper.toResponse(any(Invoice.class))).thenReturn(responseDto);
+        when(invoiceMapper.toResponse(any(Invoice.class), anyList())).thenReturn(responseDto);
 
         // Act
         InvoiceResponse result = invoiceService.create(request);
@@ -116,8 +122,9 @@ class InvoiceServiceTest {
         request.setSaleId(100);
         request.setType(InvoiceType.DETAILED);
 
-        when(saleRepository.findByIdWithDetails(100)).thenReturn(Optional.of(sampleSale));
-        when(invoiceRepository.existsBySale_IdSale(100)).thenReturn(false);
+        when(saleRepository.findById(100)).thenReturn(Optional.of(sampleSale));
+        when(invoiceRepository.existsBySale_Id(100)).thenReturn(false);
+        when(saleDetailRepository.findBySaleId(100)).thenReturn(List.of());
         when(watermarkStrategy.resolveText(InvoicePayStatus.PENDING)).thenReturn("PENDING");
 
         InvoiceResponse responseDto = new InvoiceResponse();
@@ -128,7 +135,7 @@ class InvoiceServiceTest {
         responseDto.setHasWatermark(true);
         responseDto.setWatermarkText("PENDING");
 
-        when(invoiceMapper.toResponse(any(Invoice.class))).thenReturn(responseDto);
+        when(invoiceMapper.toResponse(any(Invoice.class), anyList())).thenReturn(responseDto);
 
         // Act
         InvoiceResponse result = invoiceService.create(request);
@@ -158,8 +165,8 @@ class InvoiceServiceTest {
         request.setSaleId(100);
         request.setType(InvoiceType.SIMPLE);
 
-        when(saleRepository.findByIdWithDetails(100)).thenReturn(Optional.of(sampleSale));
-        when(invoiceRepository.existsBySale_IdSale(100)).thenReturn(true);
+        when(saleRepository.findById(100)).thenReturn(Optional.of(sampleSale));
+        when(invoiceRepository.existsBySale_Id(100)).thenReturn(true);
 
         // Act & Assert
         assertThrows(InvoiceAlreadyExistsException.class, () -> invoiceService.create(request));
@@ -173,7 +180,7 @@ class InvoiceServiceTest {
         request.setSaleId(999);
         request.setType(InvoiceType.SIMPLE);
 
-        when(saleRepository.findByIdWithDetails(999)).thenReturn(Optional.empty());
+        when(saleRepository.findById(999)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThrows(ResourceNotFoundException.class, () -> invoiceService.create(request));

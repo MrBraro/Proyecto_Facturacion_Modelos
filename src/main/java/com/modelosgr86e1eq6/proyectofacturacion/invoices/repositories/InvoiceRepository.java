@@ -27,7 +27,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Integer> {
      * @param saleId identificador de la venta
      * @return {@code true} si ya existe una factura para esa venta
      */
-    boolean existsBySale_IdSale(Integer saleId);
+    boolean existsBySale_Id(Integer saleId);
 
     /**
      * Recupera una factura por su ID junto con la venta, el cliente
@@ -37,13 +37,10 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Integer> {
      * @return {@link Optional} con la factura completamente cargada
      */
     @Query("SELECT i FROM Invoice i " +
-           "JOIN FETCH i.sale s " +
-           "JOIN FETCH s.client " +
-           "LEFT JOIN FETCH s.details d " +
-           "LEFT JOIN FETCH d.product " +
-           "WHERE i.idInvoice = :invoiceId")
+            "JOIN FETCH i.sale s " +
+            "JOIN FETCH s.client " +
+            "WHERE i.idInvoice = :invoiceId")
     Optional<Invoice> findByIdWithDetails(@Param("invoiceId") Integer invoiceId);
-
     /**
      * Lista todas las facturas con sus ventas y clientes cargados.
      * Usado por el endpoint de listado para evitar múltiples queries lazy.

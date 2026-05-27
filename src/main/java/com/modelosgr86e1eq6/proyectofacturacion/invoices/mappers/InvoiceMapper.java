@@ -12,13 +12,7 @@ import java.util.List;
 /**
  * Mapper para convertir la entidad {@link Invoice} al DTO de salida {@link InvoiceResponse}.
  *
- * <p>Proyecta los datos del cliente (desnormalizados desde {@code Sale.client})
- * y las líneas de detalle de productos en una respuesta plana y segura para
- * exposición por la API REST.</p>
- *
  * @author MrBraro
- * @see Invoice
- * @see InvoiceResponse
  */
 @Component
 public class InvoiceMapper {
@@ -26,19 +20,16 @@ public class InvoiceMapper {
     /**
      * Convierte una {@link Invoice} a su representación pública {@link InvoiceResponse}.
      *
-     * <p>Requiere que las relaciones {@code sale.client} y {@code sale.details}
-     * estén ya inicializadas (no lazy) para evitar {@code LazyInitializationException}.
-     * El repositorio provee estas relaciones mediante JOIN FETCH.</p>
-     *
-     * @param invoice entidad a convertir; no debe ser {@code null}
+     * @param invoice entidad a convertir
+     * @param details lista de detalles de la venta asociada
      * @return DTO con los datos completos de la factura
      */
-    public InvoiceResponse toResponse(Invoice invoice) {
+    public InvoiceResponse toResponse(Invoice invoice, List<SaleDetail> details) {
         InvoiceResponse response = new InvoiceResponse();
 
         response.setId(invoice.getIdInvoice());
         response.setInvoiceNumber(invoice.getInvoiceNumber());
-        response.setSaleId(invoice.getSale().getIdSale());
+        response.setSaleId(invoice.getSale().getId());
 
         // Client data — denormalized from sale.client
         response.setClientName(invoice.getSale().getClient().getName());
@@ -51,7 +42,7 @@ public class InvoiceMapper {
         response.setTax(invoice.getTax());
         response.setTotal(invoice.getTotal());
 
-        response.setLineItems(mapLineItems(invoice.getSale().getDetails()));
+        response.setLineItems(mapLineItems(details));
 
         response.setPdfPath(invoice.getPdfPath());
         response.setHasQr(invoice.isHasQr());
@@ -81,7 +72,7 @@ public class InvoiceMapper {
         item.setProductName(detail.getProduct().getName());
         item.setQuantity(detail.getQuantity());
         item.setUnitPrice(detail.getUnitPrice());
-        item.setLineTotal(detail.getLineTotal());
+        item.setLineTotal(detail.getLineSubtotal());
         return item;
     }
 }

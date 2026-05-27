@@ -1,5 +1,6 @@
 package com.modelosgr86e1eq6.proyectofacturacion.invoices.entities;
 
+import com.modelosgr86e1eq6.proyectofacturacion.invoices.Builder.InvoiceDirector;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.entities.Sale;
 import jakarta.persistence.*;
 import lombok.*;
@@ -33,8 +34,8 @@ import java.time.LocalDateTime;
  * servicio de generación PDF cuando esté implementado.</p>
  *
  * @author MrBraro
- * @see com.modelosgr86e1eq6.proyectofacturacion.pattern.builder.invoice.InvoiceBuilder
- * @see com.modelosgr86e1eq6.proyectofacturacion.pattern.builder.invoice.InvoiceDirector
+ * @see com.modelosgr86e1eq6.proyectofacturacion.invoices.Builder.InvoiceBuilder
+ * @see InvoiceDirector
  */
 @Entity
 @Table(name = "invoices")
@@ -60,7 +61,6 @@ public class Invoice {
      * <p>No se inserta ni actualiza desde Java; Hibernate lo lee de la BD
      * tras el INSERT gracias a {@code @Generated(INSERT)}.</p>
      */
-    @Generated(GenerationTime.INSERT)
     @Column(name = "invoice_number", insertable = false, updatable = false, length = 20)
     private String invoiceNumber;
 
@@ -105,7 +105,7 @@ public class Invoice {
 
     /**
      * Monto de impuestos de la factura.
-     * Reutilizado directamente desde {@link Sale#getTax()}.
+     * Reutilizado directamente desde {@link Sale#getIva()}.
      */
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal tax;

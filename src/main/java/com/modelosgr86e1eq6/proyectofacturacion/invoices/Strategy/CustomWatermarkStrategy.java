@@ -1,4 +1,4 @@
-package com.modelosgr86e1eq6.proyectofacturacion.util.pdf.watermark;
+package com.modelosgr86e1eq6.proyectofacturacion.invoices.Strategy;
 
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.entities.InvoicePayStatus;
 
