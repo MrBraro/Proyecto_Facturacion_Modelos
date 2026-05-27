@@ -44,7 +44,7 @@ final class InvoiceBuilderSupport {
      */
     static void applyTotal(Invoice.InvoiceBuilder builder, Sale sale) {
         builder.subtotal(sale.getSubtotal())
-               .tax(sale.getTax())
+               .tax(sale.getIva())
                .total(sale.getTotal());
     }
 }
