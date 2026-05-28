@@ -5,10 +5,8 @@ import com.modelosgr86e1eq6.proyectofacturacion.notifications.enums.Notification
 import com.modelosgr86e1eq6.proyectofacturacion.notifications.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.UuidGenerator;
  
 import java.time.LocalDateTime;
-import java.util.UUID;
  
 @Entity
 @Table(name = "notificaciones")
@@ -21,17 +19,16 @@ public class Notification {
  
     @Id
     @GeneratedValue
-    @UuidGenerator
     @Column(name = "id", updatable = false, nullable = false)
-    private UUID id;
+    private Integer id;
  
     // Referencia a la factura que originó la notificación (polimórfica, no FK)
     @Column(name = "invoice_id", nullable = false)
-    private UUID invoiceId;
+    private Integer invoiceId;
  
     // Referencia al cliente receptor
     @Column(name = "client_id", nullable = false)
-    private UUID clientId;
+    private Integer clientId;
  
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 20)
