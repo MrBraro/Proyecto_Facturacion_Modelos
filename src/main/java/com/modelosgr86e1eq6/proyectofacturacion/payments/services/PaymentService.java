@@ -1,5 +1,6 @@
 package com.modelosgr86e1eq6.proyectofacturacion.payments.services;
 
+import com.modelosgr86e1eq6.proyectofacturacion.common.exception.BusinessException;
 import com.modelosgr86e1eq6.proyectofacturacion.common.exception.ResourceNotFoundException;
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.entities.Invoice;
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.entities.InvoicePayStatus;
@@ -18,7 +19,8 @@ import com.modelosgr86e1eq6.proyectofacturacion.payments.repositories.PaymentRep
 import com.modelosgr86e1eq6.proyectofacturacion.users.entities.User;
 import com.modelosgr86e1eq6.proyectofacturacion.users.repositories.UserRepository;
 import com.modelosgr86e1eq6.proyectofacturacion.util.qr.QrGeneratorUtil;
-import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -52,7 +54,7 @@ public class PaymentService {
         User user = getAuthenticatedUser();
 
         PaymentProcessor processor = factory.getProcessor(request.getMethod());
-        PaymentProcessor proxy     = new PaymentProcessorProxy(processor, invoiceRepository);
+        PaymentProcessor proxy     = new PaymentProcessorProxy(processor, invoiceRepository, paymentRepository);
 
         Payment payment = proxy.processPayment(request);
         payment.setInvoice(invoice);
@@ -77,6 +79,10 @@ public class PaymentService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Invoice not found with id: " + request.getInvoiceId()));
 
+        if (invoice.getPayStatus() == InvoicePayStatus.PAID) {
+            throw new BusinessException("Invoice is already paid");
+        }
+
         User user = getAuthenticatedUser();
 
         Payment payment = Payment.builder()
@@ -97,9 +103,18 @@ public class PaymentService {
 
     // ── RF-26: Webhook ────────────────────────────────────────────────────────
 
+    @Value("${app.webhook.secret}")
+    private String webhookSecret;
+
     @Transactional
     public void handleWebhook(String signature, Map<String, Object> payload) {
-        log.info("Webhook received with signature: {}", signature);
+
+        if (!webhookSecret.equals(signature)) {
+            log.warn("Invalid webhook signature");
+            throw new BusinessException("Invalid webhook signature");
+        }
+
+        log.info("Webhook received with valid signature");
 
         String externalReference = (String) payload.get("reference");
         String statusRaw         = (String) payload.get("status");
@@ -109,21 +124,32 @@ public class PaymentService {
             return;
         }
 
-        paymentRepository.findByExternalReference(externalReference).ifPresent(payment -> {
-            PaymentStatus newStatus = "APPROVED".equalsIgnoreCase(statusRaw)
-                    ? PaymentStatus.APROBADO
-                    : PaymentStatus.RECHAZADO;
+        paymentRepository.findByExternalReference(externalReference)
+                .ifPresent(payment -> {
 
-            payment.setStatus(newStatus);
-            paymentRepository.save(payment);
+                    PaymentStatus newStatus =
+                            "APPROVED".equalsIgnoreCase(statusRaw)
+                                    ? PaymentStatus.APROBADO
+                                    : PaymentStatus.RECHAZADO;
 
-            if (newStatus == PaymentStatus.APROBADO) {
-                Invoice invoice = payment.getInvoice();
-                invoice.setPayStatus(InvoicePayStatus.PAID);
-                invoiceRepository.save(invoice);
-                log.info("Invoice {} marked as PAID via webhook", invoice.getIdInvoice());
-            }
-        });
+                    payment.setStatus(newStatus);
+
+                    paymentRepository.save(payment);
+
+                    if (newStatus == PaymentStatus.APROBADO) {
+
+                        Invoice invoice = payment.getInvoice();
+
+                        invoice.setPayStatus(InvoicePayStatus.PAID);
+
+                        invoiceRepository.save(invoice);
+
+                        log.info(
+                                "Invoice {} marked as PAID via webhook",
+                                invoice.getIdInvoice()
+                        );
+                    }
+                });
     }
 
     // ── RF-27: Find payment by ID ─────────────────────────────────────────────

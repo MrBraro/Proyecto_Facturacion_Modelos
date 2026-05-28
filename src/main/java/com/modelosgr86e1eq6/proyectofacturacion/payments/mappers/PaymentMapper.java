@@ -2,11 +2,9 @@ package com.modelosgr86e1eq6.proyectofacturacion.payments.mappers;
 
 import com.modelosgr86e1eq6.proyectofacturacion.payments.dto.PaymentResponse;
 import com.modelosgr86e1eq6.proyectofacturacion.payments.entities.Payment;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 public class PaymentMapper {
 
     public PaymentResponse toResponse(Payment payment) {

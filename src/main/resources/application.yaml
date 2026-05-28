@@ -58,6 +58,8 @@ spring:
 app:
   jwt:
     secret: ${JWT_SECRET:dev_secret_key_cambiar_en_produccion_minimo_256_bits}
+  webhook:
+    secret: ${WEBHOOK_SECRET:my-secret-key}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
   storage:
@@ -129,7 +131,6 @@ server:
   port: ${PORT:8080}
   error:
     include-stacktrace: never       # No exponer stacktrace al usuario
-
 ---
 # =============================================
 # CONFIGURACIONES COMUNES

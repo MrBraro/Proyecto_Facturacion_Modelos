@@ -41,10 +41,11 @@ public class PaymentController {
     // ── RF-26: Webhook ────────────────────────────────────────────────────────
     @PostMapping("/webhook")
     public ResponseEntity<Void> webhook(
-            @RequestHeader(value = "X-Signature", required = false) String signature,
+            @RequestHeader("X-Signature") String signature,
             @RequestBody Map<String, Object> payload) {
 
         paymentService.handleWebhook(signature, payload);
+
         return ResponseEntity.ok().build();
     }
 

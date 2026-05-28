@@ -27,4 +27,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
             @Param("status")    PaymentStatus status,
             Pageable pageable
     );
+
+    Optional<Payment> findByInvoice_IdInvoice(Integer invoiceId);
 }
