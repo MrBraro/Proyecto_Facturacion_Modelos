@@ -5,7 +5,7 @@ import com.modelosgr86e1eq6.proyectofacturacion.notifications.pattern.decorator.
 import com.modelosgr86e1eq6.proyectofacturacion.notifications.pattern.decorator.EmailNotificationDecorator;
 import com.modelosgr86e1eq6.proyectofacturacion.notifications.pattern.decorator.Notifier;
 import com.modelosgr86e1eq6.proyectofacturacion.notifications.pattern.decorator.SmsNotificationDecorator;
-import com.modelosgr86e1eq6.proyectofacturacion.notifications.repository.NotificationRepository;
+import com.modelosgr86e1eq6.proyectofacturacion.notifications.repositories.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

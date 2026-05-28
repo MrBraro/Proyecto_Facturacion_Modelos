@@ -3,7 +3,7 @@ package com.modelosgr86e1eq6.proyectofacturacion.notifications.pattern.observer;
 import com.modelosgr86e1eq6.proyectofacturacion.notifications.dto.NotificationContext;
 import com.modelosgr86e1eq6.proyectofacturacion.notifications.enums.NotificationEvent;
 import com.modelosgr86e1eq6.proyectofacturacion.notifications.enums.NotificationType;
-import com.modelosgr86e1eq6.proyectofacturacion.notifications.service.NotificationService;
+import com.modelosgr86e1eq6.proyectofacturacion.notifications.services.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

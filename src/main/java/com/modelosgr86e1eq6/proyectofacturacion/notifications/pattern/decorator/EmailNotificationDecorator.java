@@ -2,7 +2,7 @@ package com.modelosgr86e1eq6.proyectofacturacion.notifications.pattern.decorator
 
 import com.modelosgr86e1eq6.proyectofacturacion.notifications.dto.NotificationContext;
 import com.modelosgr86e1eq6.proyectofacturacion.notifications.enums.NotificationStatus;
-import com.modelosgr86e1eq6.proyectofacturacion.notifications.repository.NotificationRepository;
+import com.modelosgr86e1eq6.proyectofacturacion.notifications.repositories.NotificationRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
