@@ -19,7 +19,9 @@ import com.modelosgr86e1eq6.proyectofacturacion.payments.repositories.PaymentRep
 import com.modelosgr86e1eq6.proyectofacturacion.users.entities.User;
 import com.modelosgr86e1eq6.proyectofacturacion.users.repositories.UserRepository;
 import com.modelosgr86e1eq6.proyectofacturacion.util.qr.QrGeneratorUtil;
+import com.modelosgr86e1eq6.proyectofacturacion.notifications.pattern.observer.PaymentProcessedEvent;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +44,7 @@ public class PaymentService {
     private final InvoiceRepository      invoiceRepository;
     private final UserRepository         userRepository;
     private final QrGeneratorUtil        qrGeneratorUtil;
+    private final ApplicationEventPublisher eventPublisher;
 
     // ── RF-25: Process payment ────────────────────────────────────────────────
 
@@ -68,6 +71,7 @@ public class PaymentService {
         }
 
         Payment saved = paymentRepository.save(payment);
+        publishPaymentProcessedEvent(saved, invoice);
         return paymentMapper.toResponse(saved);
     }
 
@@ -98,6 +102,7 @@ public class PaymentService {
         invoiceRepository.save(invoice);
 
         Payment saved = paymentRepository.save(payment);
+        publishPaymentProcessedEvent(saved, invoice);
         return paymentMapper.toResponse(saved);
     }
 
@@ -196,4 +201,21 @@ public class PaymentService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Authenticated user not found: " + email));
     }
+
+        private void publishPaymentProcessedEvent(Payment payment, Invoice invoice) {
+        var client = invoice.getSale().getClient();
+        boolean success = payment.getStatus() == PaymentStatus.APROBADO;
+
+        eventPublisher.publishEvent(new PaymentProcessedEvent(
+            this,
+            invoice.getIdInvoice(),
+            client.getIdClient(),
+            client.getName(),
+            client.getEmail(),
+            client.getTelephone(),
+            invoice.getInvoiceNumber(),
+            success,
+            payment.getType().name()
+        ));
+        }
 }
