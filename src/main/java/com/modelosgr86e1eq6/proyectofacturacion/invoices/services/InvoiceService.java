@@ -16,12 +16,14 @@ import com.modelosgr86e1eq6.proyectofacturacion.sales.entities.SaleDetail;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.repositories.SaleDetailRepository;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.repositories.SaleRepository;
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.Builder.DetailedInvoiceBuilder;
+import com.modelosgr86e1eq6.proyectofacturacion.notifications.pattern.observer.InvoiceGeneratedEvent;
 import com.modelosgr86e1eq6.proyectofacturacion.util.pdf.InvoicePdfData;
 import com.modelosgr86e1eq6.proyectofacturacion.util.pdf.PdfGeneratorUtil;
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.Strategy.StatusWatermarkStrategy;
 import com.modelosgr86e1eq6.proyectofacturacion.util.qr.QrGeneratorUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.nio.file.Path;
@@ -67,6 +69,7 @@ public class InvoiceService {
     private final StatusWatermarkStrategy watermarkStrategy;
     private final PdfGeneratorUtil  pdfGeneratorUtil;
     private final SaleDetailRepository saleDetailRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     // ── RF-18 / RF-19: Generate invoice ──────────────────────────────────────
 
@@ -98,10 +101,21 @@ public class InvoiceService {
         InvoiceDirector director = new InvoiceDirector(builder);
 
         Invoice invoice = buildByType(director, sale, request.getType());
-        invoiceRepository.save(invoice);
+        Invoice saved = invoiceRepository.save(invoice);
+
+        var client = sale.getClient();
+        eventPublisher.publishEvent(new InvoiceGeneratedEvent(
+            this,
+            saved.getIdInvoice(),
+            client.getIdClient(),
+            client.getName(),
+            client.getEmail(),
+            client.getTelephone(),
+            saved.getInvoiceNumber()
+        ));
 
         log.info("Invoice created successfully for sale ID: {}", request.getSaleId());
-        return invoiceMapper.toResponse(invoice, saleDetailRepository.findBySaleId(request.getSaleId()));
+        return invoiceMapper.toResponse(saved, saleDetailRepository.findBySaleId(request.getSaleId()));
     }
 
     // ── List invoices ─────────────────────────────────────────────────────────
