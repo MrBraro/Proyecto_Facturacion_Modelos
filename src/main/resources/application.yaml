@@ -131,8 +131,39 @@ server:
   port: ${PORT:8080}
   error:
     include-stacktrace: never       # No exponer stacktrace al usuario
+
+
+
+# ──────────────────────────────────────────────
+#  Configuración módulo de Notificaciones
+# ──────────────────────────────────────────────
+
 ---
-# =============================================
+# ── JavaMailSender ───────
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_USERNAME}
+    password: ${GMAIL_APP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+# ── Twilio ─────────────────────────────────────
+twilio:
+  account-sid: ${TWILIO_ACCOUNT_SID}
+  auth-token: ${TWILIO_AUTH_TOKEN}
+  phone-number: ${TWILIO_PHONE_NUMBER}
+
 # CONFIGURACIONES COMUNES
 # =============================================
 
