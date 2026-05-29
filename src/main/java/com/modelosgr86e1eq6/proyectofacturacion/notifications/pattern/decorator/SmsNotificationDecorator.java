@@ -35,6 +35,7 @@ public class SmsNotificationDecorator extends NotificationDecorator {
         if (phone == null || phone.isBlank()) {
             log.warn("[SmsDecorator] Cliente sin teléfono registrado, omitiendo SMS. invoiceId: {}",
                     context.getInvoiceId());
+            updateStatus(context, NotificationStatus.FAILED);
             return;
         }
  
