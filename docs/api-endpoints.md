@@ -73,7 +73,7 @@ Note: All endpoints in this controller require role `ADMIN` (class-level `@PreAu
   - Request: `CreateUserRequest` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/users/dto/CreateUserRequest.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/users/dto/CreateUserRequest.java))
   - Response: 201, `UserSummaryResponse`
 
-- PUT /api/v1/users/{id}
+- PATCH /api/v1/users/{id}
   - Description: Update user
   - Request: `UpdateUserRequest` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/users/dto/UpdateUserRequest.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/users/dto/UpdateUserRequest.java))
   - Response: 200, `UserSummaryResponse`
@@ -271,4 +271,15 @@ Note: All endpoints in this controller require role `ADMIN` (class-level `@PreAu
   - Request: Path variable `invoiceId` (Integer) — Invoice ID to generate QR for
   - Response: 200, `image/png` (binary QR code image)
   - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- GET /api/v1/payments/qr/pay/{invoiceId}
+  - Description: Pay by QR Simulation
+  - Request: Path variable `invoiceId` (Integer) — Invoice ID
+  - Response: 200, `text/html` — HTML page with embedded QR image
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
  
+- GET /api/v1/payments/qr/view/{invoiceId}
+  - Description: Simulates QR payment execution. Called automatically when the QR code is scanned. Registers the payment, marks the invoice as PAID and triggers payment notification. Uses the sale's registered user as the payment owner.
+  - Request: Path variable `invoiceId` (Integer) — Invoice ID
+  - Response: 200, `ApiResponse<PaymentResponse>` — Completed payment details
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
