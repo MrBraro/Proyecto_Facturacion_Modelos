@@ -75,7 +75,9 @@ app:
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
   storage:
-    pdf-directory: ${PDF_STORAGE_DIR:./invoices-pdf}
+    pdf-directory: ${PDF_STORAGE_DIR:./invoices/pdf}
+    xml-directory: ${XML_STORAGE_DIR:./invoices/xml}
+    json-directory: ${JSON_STORAGE_DIR:./invoices/json}
 
 # ─── TWILIO ───────────────────────────────────
 twilio:

@@ -187,12 +187,12 @@ public class PaymentController {
             </body>
             </html>
             """.formatted(
-                invoice.getInvoiceNumber(),
-                invoice.getInvoiceNumber(),
-                invoice.getSale().getClient().getName(),
+                org.springframework.web.util.HtmlUtils.htmlEscape(invoice.getInvoiceNumber()),
+                org.springframework.web.util.HtmlUtils.htmlEscape(invoice.getInvoiceNumber()),
+                org.springframework.web.util.HtmlUtils.htmlEscape(invoice.getSale().getClient().getName()),
                 invoice.getTotal().toPlainString(),
                 invoiceId,
-                invoice.getPayStatus().name()
+                org.springframework.web.util.HtmlUtils.htmlEscape(invoice.getPayStatus().name())
         );
 
         return ResponseEntity.ok()

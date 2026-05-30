@@ -204,7 +204,7 @@ public class PaymentService {
             throw new BusinessException("Invoice is already paid");
         }
 
-        if (paymentRepository.existsById(Long.valueOf(invoiceId))) {
+        if (paymentRepository.findByInvoice_IdInvoice(invoiceId).isPresent()) {
             throw new BusinessException("A payment already exists for this invoice");
         }
 

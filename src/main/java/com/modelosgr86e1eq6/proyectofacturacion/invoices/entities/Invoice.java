@@ -1,6 +1,7 @@
 package com.modelosgr86e1eq6.proyectofacturacion.invoices.entities;
 
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.Builder.InvoiceDirector;
+import com.modelosgr86e1eq6.proyectofacturacion.invoices.Visitor.InvoiceVisitor;
 import com.modelosgr86e1eq6.proyectofacturacion.sales.entities.Sale;
 import jakarta.persistence.*;
 import lombok.*;
@@ -157,5 +158,9 @@ public class Invoice {
         if (this.issueDate == null) {
             this.issueDate = LocalDate.now();
         }
+    }
+
+    public byte[] accept(InvoiceVisitor visitor) {
+        return visitor.visit(this);
     }
 }
