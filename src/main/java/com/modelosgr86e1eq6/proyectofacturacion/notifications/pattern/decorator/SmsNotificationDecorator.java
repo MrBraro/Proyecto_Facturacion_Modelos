@@ -1,8 +1,9 @@
 package com.modelosgr86e1eq6.proyectofacturacion.notifications.pattern.decorator;
 
 import com.modelosgr86e1eq6.proyectofacturacion.notifications.dto.NotificationContext;
-import com.modelosgr86e1eq6.proyectofacturacion.notifications.enums.NotificationStatus;
 import com.modelosgr86e1eq6.proyectofacturacion.notifications.repositories.NotificationRepository;
+import com.modelosgr86e1eq6.proyectofacturacion.notifications.entities.Notification;
+import com.modelosgr86e1eq6.proyectofacturacion.notifications.enums.NotificationType;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * Twilio debe estar inicializado antes de usar este decorador.
  * La inicialización se hace en TwilioConfig con Twilio.init().
  */
+ 
 @Slf4j
 public class SmsNotificationDecorator extends NotificationDecorator {
  
@@ -33,37 +35,36 @@ public class SmsNotificationDecorator extends NotificationDecorator {
         String phone = context.getClientPhone();
  
         if (phone == null || phone.isBlank()) {
-            log.warn("[SmsDecorator] Cliente sin teléfono registrado, omitiendo SMS. invoiceId: {}",
+            log.warn("[SmsDecorator] Cliente sin teléfono, omitiendo SMS. invoiceId: {}",
                     context.getInvoiceId());
-            updateStatus(context, NotificationStatus.FAILED);
             return;
         }
+ 
+        // Registro propio con type=SMS — completamente independiente
+        // del registro EMAIL que pudo haber creado el EmailDecorator
+        Notification record = createPendingRecord(
+                context, NotificationType.SMS, phone);
  
         log.info("[SmsDecorator] Enviando SMS a: {}", phone);
  
         try {
-            // Twilio espera el número en formato E.164: +57XXXXXXXXXX
             Message message = Message.creator(
                             new PhoneNumber(phone),
                             new PhoneNumber(twilioFromNumber),
-                            buildSmsText(context))
+                            truncate(context.getMessage()))
                     .create();
  
+            markSent(record);
             log.info("[SmsDecorator] SMS enviado. SID: {}", message.getSid());
-            updateStatus(context, NotificationStatus.SENT);
  
         } catch (Exception ex) {
+            markFailed(record);
             log.error("[SmsDecorator] Fallo al enviar SMS a {}: {}", phone, ex.getMessage());
-            updateStatus(context, NotificationStatus.FAILED);
         }
     }
  
-    // El SMS es más corto que el email — se recorta el mensaje
-    private String buildSmsText(NotificationContext context) {
-        String msg = context.getMessage();
-        if (msg == null) {
-            return "";
-        }
+    private String truncate(String msg) {
         return msg.length() > 160 ? msg.substring(0, 157) + "..." : msg;
     }
 }
+ 

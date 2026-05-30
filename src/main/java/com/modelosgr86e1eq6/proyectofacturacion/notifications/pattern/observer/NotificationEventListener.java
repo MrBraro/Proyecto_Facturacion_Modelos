@@ -9,18 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import java.util.List;
  
-/**
- * Observer del módulo de notificaciones.
- *
- * Escucha eventos publicados por otros módulos (Invoice, Payment) mediante
- * el ApplicationEventPublisher de Spring. Al recibirlos, construye el
- * NotificationContext correspondiente y delega al NotificationService,
- * que ensambla la cadena de decoradores y ejecuta el envío.
- *
- * @Async garantiza que el procesamiento de notificaciones no bloquee
- * el hilo principal del módulo publicador.
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -28,14 +18,11 @@ public class NotificationEventListener {
  
     private final NotificationService notificationService;
  
-    // ── Escucha: Factura generada ─────────────────────────────────────────
+    // ── Factura generada → EMAIL + SMS ────────────────────────────────────
     @EventListener
     @Async("notificationExecutor")
     public void onInvoiceGenerated(InvoiceGeneratedEvent event) {
-        log.info("[NotificationListener] Factura generada recibida: {}", event.getInvoiceNumber());
- 
-        String subject = "Tu factura " + event.getInvoiceNumber() + " ha sido generada";
-        String message = buildInvoiceMessage(event.getClientName(), event.getInvoiceNumber());
+        log.info("[NotificationListener] Factura generada: {}", event.getInvoiceNumber());
  
         NotificationContext context = NotificationContext.builder()
                 .invoiceId(event.getInvoiceId())
@@ -44,15 +31,15 @@ public class NotificationEventListener {
                 .clientEmail(event.getClientEmail())
                 .clientPhone(event.getClientPhone())
                 .event(NotificationEvent.INVOICE_GENERATED)
-                .type(NotificationType.EMAIL_SMS)
-                .subject(subject)
-                .message(message)
+                .channels(List.of(NotificationType.SMS, NotificationType.EMAIL))
+                .subject("Tu factura " + event.getInvoiceNumber() + " ha sido generada")
+                .message(buildInvoiceMessage(event.getClientName(), event.getInvoiceNumber()))
                 .build();
  
         notificationService.notify(context);
     }
  
-    // ── Escucha: Pago procesado (exitoso o rechazado) ─────────────────────
+    // ── Pago exitoso → EMAIL + SMS ────────────────────────────────────────
     @EventListener
     @Async("notificationExecutor")
     public void onPaymentProcessed(PaymentProcessedEvent event) {
@@ -82,7 +69,7 @@ public class NotificationEventListener {
                 .clientEmail(event.getClientEmail())
                 .clientPhone(event.getClientPhone())
                 .event(notifEvent)
-                .type(NotificationType.EMAIL_SMS)
+                .channels(List.of(NotificationType.SMS, NotificationType.EMAIL))
                 .subject(subject)
                 .message(message)
                 .build();
@@ -90,29 +77,26 @@ public class NotificationEventListener {
         notificationService.notify(context);
     }
  
-    // ── Helpers: construcción de mensajes ────────────────────────────────
+    // ── Mensajes ──────────────────────────────────────────────────────────
  
     private String buildInvoiceMessage(String clientName, String invoiceNumber) {
         return String.format(
-                "Hola %s, tu factura con número %s ha sido generada exitosamente. " +
+                "Hola %s, tu factura %s ha sido generada exitosamente. " +
                 "Puedes consultarla desde el sistema o contactar a tu asesor.",
                 clientName, invoiceNumber);
     }
  
-    private String buildPaymentSuccessMessage(String clientName,
-                                               String invoiceNumber,
-                                               String paymentMethod) {
+    private String buildPaymentSuccessMessage(String name, String number, String method) {
         return String.format(
                 "Hola %s, hemos recibido tu pago para la factura %s mediante %s. " +
                 "Tu factura quedó marcada como PAGADA. ¡Gracias!",
-                clientName, invoiceNumber, paymentMethod);
+                name, number, method);
     }
  
-    private String buildPaymentRejectedMessage(String clientName, String invoiceNumber) {
+    private String buildPaymentRejectedMessage(String name, String number) {
         return String.format(
-                "Hola %s, lamentablemente el pago para la factura %s fue rechazado. " +
+                "Hola %s, el pago para la factura %s fue rechazado. " +
                 "Por favor intenta nuevamente o comunícate con soporte.",
-                clientName, invoiceNumber);
+                name, number);
     }
 }
- 

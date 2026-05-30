@@ -1,11 +1,16 @@
 # =============================================
-# Configuración para Proyecto_Facturación
+# CONFIGURACIÓN GLOBAL / COMÚN (Para todos los perfiles)
 # =============================================
-
-# ─── PERFIL ACTIVO ───────────────────────────
 spring:
   profiles:
     active: dev
+  config:
+    import: optional:dotenv.properties
+
+# ─── SERVIDOR GENERAL ────────────────────────
+server:
+  servlet:
+    context-path: /
 
 ---
 # =============================================
@@ -18,7 +23,7 @@ spring:
 
   # ─── BASE DE DATOS POSTGRESQL ──────────────
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/facturacion_db?stringtype=unspecified}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/facturacion_db?stringtype=unspecified}
     username: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD:cesr1311}
     driver-class-name: org.postgresql.Driver
@@ -47,29 +52,40 @@ spring:
     livereload:
       enabled: true
 
-  # ─── CORS ──────────────────────────────────
+  # ─── CORS INTERNO SPRING ───────────────────
   cors:
     allowed-origins: http://localhost:5173,http://127.0.0.1:5173
 
-  # ─── MAIL ────────────────────────────────────
+  # ─── MAIL CONFIGURATION (SMTP GMAIL) ───────
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${GMAIL_USERNAME:}
+    username: ${GMAIL_USERNAME:sangroniscarlosenrique2@gmail.com}
     password: ${GMAIL_APP_PASSWORD:}
     properties:
       mail:
         smtp:
           auth: true
+          ssl:
+            trust: smtp.gmail.com
           starttls:
             enable: true
             required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
-# ─── APP CUSTOM PROPERTIES ──────────────────
+# ─── TWILIO CONFIGURATION (dev) ──────────────
+twilio:
+  account-sid: ${TWILIO_ACCOUNT_SID:}
+  auth-token: ${TWILIO_AUTH_TOKEN:}
+  phone-number: ${TWILIO_PHONE_NUMBER:}
+
+# ─── APP CUSTOM PROPERTIES (dev) ─────────────
 app:
   jwt:
     secret: ${JWT_SECRET:dev_secret_key_cambiar_en_produccion_minimo_256_bits}
-  base-url: https://stilt-cornstalk-lively.ngrok-free.dev
+  base-url: ${APP_BASE_URL:https://stilt-cornstalk-lively.ngrok-free.dev}
   webhook:
     secret: ${WEBHOOK_SECRET:my-secret-key}
   cors:
@@ -79,13 +95,7 @@ app:
     xml-directory: ${XML_STORAGE_DIR:./invoices/xml}
     json-directory: ${JSON_STORAGE_DIR:./invoices/json}
 
-# ─── TWILIO ───────────────────────────────────
-twilio:
-  account-sid: ${TWILIO_ACCOUNT_SID:}
-  auth-token: ${TWILIO_AUTH_TOKEN:}
-  phone-number: ${TWILIO_PHONE_NUMBER:}
-
-# ─── LOGGING ─────────────────────────────────
+# ─── LOGGING (dev) ───────────────────────────
 logging:
   level:
     root: INFO
@@ -94,11 +104,9 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
-# ─── SERVIDOR ────────────────────────────────
+# ─── SERVIDOR (dev) ──────────────────────────
 server:
   port: 8082
-  servlet:
-    context-path: /
   error:
     include-stacktrace: always
 
@@ -135,7 +143,13 @@ spring:
     restart:
       enabled: false
 
-# ─── APP CUSTOM PROPERTIES ──────────────────
+# ─── TWILIO CONFIGURATION (prod) ─────────────
+twilio:
+  account-sid: ${TWILIO_ACCOUNT_SID}
+  auth-token: ${TWILIO_AUTH_TOKEN}
+  phone-number: ${TWILIO_PHONE_NUMBER}
+
+# ─── APP CUSTOM PROPERTIES (prod) ────────────
 app:
   jwt:
     secret: ${JWT_SECRET}
@@ -144,12 +158,16 @@ app:
     secret: ${WEBHOOK_SECRET}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:}
+  storage:
+    pdf-directory: ${PDF_STORAGE_DIR:/var/invoices-pdf}
 
+# ─── LOGGING (prod) ──────────────────────────
 logging:
   level:
     root: WARN
     com.modelosgr86e1eq6.proyectofacturacion: INFO
 
+# ─── SERVIDOR (prod) ─────────────────────────
 server:
   port: ${PORT:8080}
   error:

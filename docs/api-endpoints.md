@@ -73,7 +73,7 @@ Note: All endpoints in this controller require role `ADMIN` (class-level `@PreAu
   - Request: `CreateUserRequest` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/users/dto/CreateUserRequest.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/users/dto/CreateUserRequest.java))
   - Response: 201, `UserSummaryResponse`
 
-- PUT /api/v1/users/{id}
+- PATCH /api/v1/users/{id}
   - Description: Update user
   - Request: `UpdateUserRequest` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/users/dto/UpdateUserRequest.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/users/dto/UpdateUserRequest.java))
   - Response: 200, `UserSummaryResponse`
@@ -124,3 +124,162 @@ Note: All endpoints in this controller require role `ADMIN` (class-level `@PreAu
   - Auth: ADMIN
 
 ---
+**Clients** — [src/main/java/com/modelosgr86e1eq6/proyectofacturacion/clients/controllers/ClientController.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/clients/controllers/ClientController.java)
+
+- POST /api/v1/clients
+  - Description: Register a new client (RF-07)
+  - Request: `CreateClientRequest` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/clients/dto/CreateClientRequest.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/clients/dto/CreateClientRequest.java))
+  - Response: 201, `ApiResponse<ClientResponse>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/clients/dto/ClientResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/clients/dto/ClientResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- GET /api/v1/clients
+  - Description: List all clients with pagination (RF-08)
+  - Request: Standard pagination params (`page`, `size` — default 10, `sort` — default by `name`)
+  - Response: 200, `ApiResponse<Page<ClientResponse>>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/clients/dto/ClientResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/clients/dto/ClientResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- GET /api/v1/clients/{idClient}
+  - Description: Get client details by ID (RF-09)
+  - Request: Path variable `idClient` (Integer) — Client ID
+  - Response: 200, `ApiResponse<ClientResponse>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/clients/dto/ClientResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/clients/dto/ClientResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- PATCH /api/v1/clients/{idClient}
+  - Description: Update client information partially (RF-10)
+  - Request: Path variable `idClient` (Integer) — Client ID, `UpdateClientRequest` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/clients/dto/UpdateClientRequest.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/clients/dto/UpdateClientRequest.java))
+  - Response: 200, `ApiResponse<ClientResponse>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/clients/dto/ClientResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/clients/dto/ClientResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- DELETE /api/v1/clients/{idClient}
+  - Description: Soft delete a client (RF-11)
+  - Request: Path variable `idClient` (Integer) — Client ID
+  - Response: 200, `ApiResponse<Void>`
+  - Auth: Bearer token (ADMIN only)
+---
+**Sales** — [src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/controllers/SaleController.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/controllers/SaleController.java)
+
+- POST /api/v1/sales
+  - Description: Create a new sale (RF-12)
+  - Request: `CreateSaleRequest` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/CreateSaleRequest.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/CreateSaleRequest.java))
+  - Response: 201, `ApiResponse<SaleDetailResponse>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/SaleDetailResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/SaleDetailResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- POST /api/v1/sales/{id}/products
+  - Description: Add a product to an existing sale (RF-13 + RF-15)
+  - Request: Path variable `id` (Integer) — Sale ID, `CreateSaleDetailRequest` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/CreateSaleDetailRequest.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/CreateSaleDetailRequest.java))
+  - Response: 201, `ApiResponse<SaleItemResponse>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/SaleItemResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/SaleItemResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- PUT /api/v1/sales/{id}/confirm
+  - Description: Confirm a sale, changing its status to completed (RF-14)
+  - Request: Path variable `id` (Integer) — Sale ID
+  - Response: 200, `ApiResponse<SaleDetailResponse>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/SaleDetailResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/SaleDetailResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- GET /api/v1/sales
+  - Description: List sales with optional filters and pagination (RF-16)
+  - Request: Query params `clientId` (Integer, optional), `status` (SaleStatus, optional) — PENDING, CONFIRMED, CANCELLED, `from` (LocalDateTime, optional, ISO format), `to` (LocalDateTime, optional, ISO format), plus standard pagination params (`page`, `size`, `sort` — default sort by `saleDate`)
+  - Response: 200, `ApiResponse<Page<SaleSummaryResponse>>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/SaleSummaryResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/SaleSummaryResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- GET /api/v1/sales/{id}
+  - Description: Get complete sale detail including all product lines (RF-17)
+  - Request: Path variable `id` (Integer) — Sale ID
+  - Response: 200, `ApiResponse<SaleDetailResponse>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/SaleDetailResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/SaleDetailResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- PATCH /api/v1/sales/{id}/cancel
+  - Description: Cancel a sale (RF-18)
+  - Request: Path variable `id` (Integer) — Sale ID
+  - Response: 200, `ApiResponse<SaleDetailResponse>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/SaleDetailResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/SaleDetailResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- PATCH /api/v1/sales/{id}/products/{detailId}
+  - Description: Update quantity of a product in a sale (RF-19)
+  - Request: Path variable `id` (Integer) — Sale ID, Path variable `detailId` (Integer) — Sale detail ID, `UpdateSaleDetailRequest` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/UpdateSaleDetailRequest.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/UpdateSaleDetailRequest.java))
+  - Response: 200, `ApiResponse<SaleItemResponse>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/SaleItemResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/sales/dto/SaleItemResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- DELETE /api/v1/sales/{id}/products/{detailId}
+  - Description: Remove a product from a sale (RF-20)
+  - Request: Path variable `id` (Integer) — Sale ID, Path variable `detailId` (Integer) — Sale detail ID
+  - Response: 200, `ApiResponse<Void>`
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+---
+
+**Invoices** — [src/main/java/com/modelosgr86e1eq6/proyectofacturacion/invoices/controllers/InvoiceController.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/invoices/controllers/InvoiceController.java)
+
+- POST /api/v1/invoices
+  - Description: Generate an invoice from an existing sale (RF-18/RF-19). Invoice number is auto-assigned by database trigger. Invoice type (`SIMPLE` or `DETAILED`) determines which sections the Builder pattern constructs.
+  - Request: `CreateInvoiceRequest` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/invoices/dto/CreateInvoiceRequest.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/invoices/dto/CreateInvoiceRequest.java))
+  - Response: 201, `ApiResponse<InvoiceResponse>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/invoices/dto/InvoiceResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/invoices/dto/InvoiceResponse.java))
+  - Auth: Bearer token (ADMIN)
+
+- GET /api/v1/invoices
+  - Description: List all invoices ordered by creation date descending
+  - Request: none
+  - Response: 200, `ApiResponse<List<InvoiceResponse>>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/invoices/dto/InvoiceResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/invoices/dto/InvoiceResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- GET /api/v1/invoices/{id}
+  - Description: Get complete invoice detail including product lines
+  - Request: Path variable `id` (Integer) — Invoice PK
+  - Response: 200, `ApiResponse<InvoiceResponse>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/invoices/dto/InvoiceResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/invoices/dto/InvoiceResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- GET /api/v1/invoices/{id}/export
+  - Description: Export invoice as PDF file
+  - Request: Path variable `id` (Integer) — Invoice PK, Query param `format` (String, optional, default: "pdf")
+  - Response: 200, `application/pdf` (binary file download with filename `invoice-{invoiceNumber}.pdf`)
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+---
+**Payments** — [src/main/java/com/modelosgr86e1eq6/proyectofacturacion/payments/controllers/PaymentController.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/payments/controllers/PaymentController.java)
+
+- POST /api/v1/payments
+  - Description: Process a payment for an invoice (RF-25)
+  - Request: `CreatePaymentRequest` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/payments/dto/CreatePaymentRequest.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/payments/dto/CreatePaymentRequest.java))
+  - Response: 201, `ApiResponse<PaymentResponse>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/payments/dto/PaymentResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/payments/dto/PaymentResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- POST /api/v1/payments/webhook
+  - Description: Receive payment gateway webhook notifications (RF-26)
+  - Request: Header `X-Signature` (String) — Signature for payload verification, Body `Map<String, Object>` — Webhook payload from payment provider
+  - Response: 200, Empty body
+  - Auth: none (validated via signature header)
+
+- GET /api/v1/payments/{id}
+  - Description: Get payment details by ID (RF-27)
+  - Request: Path variable `id` (Long) — Payment PK
+  - Response: 200, `ApiResponse<PaymentResponse>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/payments/dto/PaymentResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/payments/dto/PaymentResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- POST /api/v1/payments/manual
+  - Description: Register a manual payment (cash, transfer, etc.) (RF-28)
+  - Request: `ManualPaymentRequest` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/payments/dto/ManualPaymentRequest.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/payments/dto/ManualPaymentRequest.java))
+  - Response: 201, `ApiResponse<PaymentResponse>` ([src/main/java/com/modelosgr86e1eq6/proyectofacturacion/payments/dto/PaymentResponse.java](src/main/java/com/modelosgr86e1eq6/proyectofacturacion/payments/dto/PaymentResponse.java))
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- GET /api/v1/payments
+  - Description: List payments with optional filters and pagination
+  - Request: Query params `invoiceId` (Integer, optional), `method` (PaymentMethod, optional) — CASH, CREDIT_CARD, DEBIT_CARD, TRANSFER, `status` (PaymentStatus, optional) — PENDING, COMPLETED, FAILED, REFUNDED, plus standard pagination params (`page`, `size`, `sort`)
+  - Response: 200, `ApiResponse<Page<PaymentResponse>>` — Paginated list of payments
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- GET /api/v1/payments/qr/{invoiceId}
+  - Description: Generate QR code image for invoice payment (RF-23)
+  - Request: Path variable `invoiceId` (Integer) — Invoice ID to generate QR for
+  - Response: 200, `image/png` (binary QR code image)
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+
+- GET /api/v1/payments/qr/pay/{invoiceId}
+  - Description: Pay by QR Simulation
+  - Request: Path variable `invoiceId` (Integer) — Invoice ID
+  - Response: 200, `text/html` — HTML page with embedded QR image
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
+ 
+- GET /api/v1/payments/qr/view/{invoiceId}
+  - Description: Simulates QR payment execution. Called automatically when the QR code is scanned. Registers the payment, marks the invoice as PAID and triggers payment notification. Uses the sale's registered user as the payment owner.
+  - Request: Path variable `invoiceId` (Integer) — Invoice ID
+  - Response: 200, `ApiResponse<PaymentResponse>` — Completed payment details
+  - Auth: Bearer token (ADMIN, EMPLOYEE)
