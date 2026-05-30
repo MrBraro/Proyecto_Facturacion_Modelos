@@ -1,8 +1,9 @@
 package com.modelosgr86e1eq6.proyectofacturacion.notifications.pattern.decorator;
 
 import com.modelosgr86e1eq6.proyectofacturacion.notifications.dto.NotificationContext;
-import com.modelosgr86e1eq6.proyectofacturacion.notifications.enums.NotificationStatus;
 import com.modelosgr86e1eq6.proyectofacturacion.notifications.repositories.NotificationRepository;
+import com.modelosgr86e1eq6.proyectofacturacion.notifications.entities.Notification;
+import com.modelosgr86e1eq6.proyectofacturacion.notifications.enums.NotificationType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
@@ -31,32 +32,29 @@ public class EmailNotificationDecorator extends NotificationDecorator {
  
     @Override
     protected void doSend(NotificationContext context) {
-        String email = context.getClientEmail();
-
-        if (email == null || email.isBlank()) {
-            log.warn("[EmailDecorator] Cliente sin email registrado, omitiendo envío. invoiceId: {}",
-                    context.getInvoiceId());
-            updateStatus(context, NotificationStatus.FAILED);
-            return;
-        }
-
-        log.info("[EmailDecorator] Enviando email a: {}", email);
-
+        // Cada canal crea su propio registro PENDING con type=EMAIL
+        // independiente de cualquier otro canal activo en la cadena
+        Notification record = createPendingRecord(
+                context, NotificationType.EMAIL, context.getClientEmail());
+ 
+        log.info("[EmailDecorator] Enviando email a: {}", context.getClientEmail());
+ 
         try {
             SimpleMailMessage mail = new SimpleMailMessage();
             mail.setFrom(fromAddress);
-            mail.setTo(email);
+            mail.setTo(context.getClientEmail());
             mail.setSubject(context.getSubject());
             mail.setText(context.getMessage());
  
             mailSender.send(mail);
  
-            updateStatus(context, NotificationStatus.SENT);
+            markSent(record);
             log.info("[EmailDecorator] Email enviado exitosamente a: {}", context.getClientEmail());
  
         } catch (MailException ex) {
-            log.error("[EmailDecorator] Fallo al enviar email a {}: {}", context.getClientEmail(), ex.getMessage());
-            updateStatus(context, NotificationStatus.FAILED);
+            markFailed(record);
+            log.error("[EmailDecorator] Fallo al enviar email a {}: {}",
+                    context.getClientEmail(), ex.getMessage());
         }
     }
 }
