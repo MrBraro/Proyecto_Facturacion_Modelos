@@ -38,7 +38,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update         
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -52,6 +52,10 @@ spring:
     livereload:
       enabled: true
 
+  # ─── CORS INTERNO SPRING ───────────────────
+  cors:
+    allowed-origins: http://localhost:5173,http://127.0.0.1:5173
+
   # ─── MAIL CONFIGURATION (SMTP GMAIL) ───────
   mail:
     host: smtp.gmail.com
@@ -63,7 +67,7 @@ spring:
         smtp:
           auth: true
           ssl:
-            trust: smtp.gmail.com  # 👈 SÁLVANDAS: Obliga a Java a confiar en Gmail
+            trust: smtp.gmail.com
           starttls:
             enable: true
             required: true
@@ -81,6 +85,7 @@ twilio:
 app:
   jwt:
     secret: ${JWT_SECRET:dev_secret_key_cambiar_en_produccion_minimo_256_bits}
+  base-url: ${APP_BASE_URL:https://stilt-cornstalk-lively.ngrok-free.dev}
   webhook:
     secret: ${WEBHOOK_SECRET:my-secret-key}
   cors:
@@ -88,13 +93,16 @@ app:
   storage:
     pdf-directory: ${PDF_STORAGE_DIR:./invoices-pdf}
 
+# ─── LOGGING (dev) ───────────────────────────
 logging:
   level:
     root: INFO
     com.modelosgr86e1eq6.proyectofacturacion: DEBUG
     org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
+# ─── SERVIDOR (dev) ──────────────────────────
 server:
   port: 8082
   error:
@@ -122,6 +130,9 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
 
   thymeleaf:
     cache: true
@@ -140,18 +151,21 @@ twilio:
 app:
   jwt:
     secret: ${JWT_SECRET}
+  base-url: ${APP_BASE_URL}
   webhook:
     secret: ${WEBHOOK_SECRET}
   cors:
-    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS}
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:}
   storage:
     pdf-directory: ${PDF_STORAGE_DIR:/var/invoices-pdf}
 
+# ─── LOGGING (prod) ──────────────────────────
 logging:
   level:
     root: WARN
     com.modelosgr86e1eq6.proyectofacturacion: INFO
 
+# ─── SERVIDOR (prod) ─────────────────────────
 server:
   port: ${PORT:8080}
   error:

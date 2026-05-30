@@ -1,6 +1,9 @@
 package com.modelosgr86e1eq6.proyectofacturacion.payments.controllers;
 
 import com.modelosgr86e1eq6.proyectofacturacion.common.dto.ApiResponse;
+import com.modelosgr86e1eq6.proyectofacturacion.common.exception.ResourceNotFoundException;
+import com.modelosgr86e1eq6.proyectofacturacion.invoices.entities.Invoice;
+import com.modelosgr86e1eq6.proyectofacturacion.invoices.repositories.InvoiceRepository;
 import com.modelosgr86e1eq6.proyectofacturacion.payments.dto.CreatePaymentRequest;
 import com.modelosgr86e1eq6.proyectofacturacion.payments.dto.ManualPaymentRequest;
 import com.modelosgr86e1eq6.proyectofacturacion.payments.dto.PaymentResponse;
@@ -25,6 +28,7 @@ import java.util.Map;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final InvoiceRepository invoiceRepository;
 
     // ── RF-25: Process payment ────────────────────────────────────────────────
     @PostMapping
@@ -94,5 +98,105 @@ public class PaymentController {
         return ResponseEntity.ok()
                 .header("Content-Type", "image/png")
                 .body(qrBytes);
+    }
+
+    // ── RF-23: Pay by QR simulation ──────────────────────────────────────────
+    @GetMapping("/qr/pay/{invoiceId}")
+    public ResponseEntity<ApiResponse<PaymentResponse>> payByQr(
+            @PathVariable Integer invoiceId) {
+
+        PaymentResponse response = paymentService.payByQr(invoiceId);
+        return ResponseEntity.ok(ApiResponse.ok("Payment completed successfully via QR", response));
+    }
+
+    @GetMapping("/qr/view/{invoiceId}")
+    public ResponseEntity<String> viewQr(@PathVariable Integer invoiceId) {
+
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Invoice not found with id: " + invoiceId));
+
+        String html = """
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Pago QR - %s</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        min-height: 100vh;
+                        margin: 0;
+                        background-color: #f5f5f5;
+                    }
+                    .card {
+                        background: white;
+                        padding: 40px;
+                        border-radius: 12px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                        text-align: center;
+                        max-width: 400px;
+                        width: 100%%;
+                    }
+                    h2 { color: #333; margin-bottom: 8px; }
+                    p  { color: #666; margin: 4px 0; }
+                    .total {
+                        font-size: 1.5rem;
+                        font-weight: bold;
+                        color: #2e7d32;
+                        margin: 16px 0;
+                    }
+                    img {
+                        width: 220px;
+                        height: 220px;
+                        border: 2px solid #eee;
+                        border-radius: 8px;
+                        margin: 16px 0;
+                    }
+                    .status {
+                        margin-top: 16px;
+                        padding: 8px 16px;
+                        border-radius: 20px;
+                        font-size: 0.85rem;
+                        font-weight: bold;
+                        background-color: #fff3e0;
+                        color: #e65100;
+                    }
+                    .instructions {
+                        font-size: 0.85rem;
+                        color: #999;
+                        margin-top: 12px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <h2>Pago de Factura</h2>
+                    <p><strong>%s</strong></p>
+                    <p>Cliente: %s</p>
+                    <div class="total">$ %s</div>
+                    <img src="/api/v1/payments/qr/%d" alt="QR de pago" />
+                    <div class="status">Estado: %s</div>
+                    <p class="instructions">Escanea el código QR con tu celular para completar el pago</p>
+                </div>
+            </body>
+            </html>
+            """.formatted(
+                invoice.getInvoiceNumber(),
+                invoice.getInvoiceNumber(),
+                invoice.getSale().getClient().getName(),
+                invoice.getTotal().toPlainString(),
+                invoiceId,
+                invoice.getPayStatus().name()
+        );
+
+        return ResponseEntity.ok()
+                .header("Content-Type", "text/html; charset=UTF-8")
+                .body(html);
     }
 }
