@@ -1,5 +1,6 @@
 package com.modelosgr86e1eq6.proyectofacturacion.invoices.Builder;
 
+import com.modelosgr86e1eq6.proyectofacturacion.invoices.Singleton.InvoiceNumberGenerator;
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.entities.Invoice;
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.entities.InvoicePayStatus;
 import com.modelosgr86e1eq6.proyectofacturacion.invoices.entities.InvoiceType;
@@ -30,10 +31,11 @@ final class InvoiceBuilderSupport {
      * @param type    the invoice type (SIMPLE or DETAILED)
      */
     static void applyHeader(Invoice.InvoiceBuilder builder, Sale sale, InvoiceType type) {
-        builder.sale(sale)
-               .issueDate(LocalDate.now())
-               .type(type)
-               .payStatus(InvoicePayStatus.PENDING);
+        builder.invoiceNumber(InvoiceNumberGenerator.getInstance().generate())
+                .sale(sale)
+                .issueDate(LocalDate.now())
+                .type(type)
+                .payStatus(InvoicePayStatus.PENDING);
     }
 
     /**

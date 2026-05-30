@@ -31,7 +31,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
+    private final JwtAuthFilter          jwtAuthFilter;
     private final UserDetailsServiceImpl userDetailsService;
 
     @Value("${app.cors.allowed-origins}")
@@ -58,7 +58,11 @@ public class SecurityConfig {
                                 "/api/v1/auth/reset-password",
 
                                 // Webhook de pagos
-                                "/api/v1/payments/webhook"
+                                "/api/v1/payments/webhook",
+
+                                // QR de pagos — público para escaneo desde celular
+                                "/api/v1/payments/qr/pay/**",
+                                "/api/v1/payments/qr/view/**"
                         ).permitAll()
 
                         // Solo ADMIN
