@@ -1,11 +1,13 @@
 package com.modelosgr86e1eq6.proyectofacturacion.notifications.config;
 
-import com.twilio.Twilio;
-import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
+
+import com.twilio.Twilio;
+
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Inicializa el SDK de Twilio con las credenciales del proyecto.
@@ -26,7 +28,7 @@ public class TwilioConfig {
  
     @Value("${twilio.auth-token}")
     private String authToken;
- 
+
     @PostConstruct
     public void initTwilio() {
         Twilio.init(accountSid, authToken);
