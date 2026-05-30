@@ -179,16 +179,54 @@ public class PaymentService {
 
     // ── RF-23: Generate QR ────────────────────────────────────────────────────
 
+    @Value("${app.base-url:http://localhost:8082}")
+    private String baseUrl;
+
+// ── RF-23: Generate QR with payment URL ──────────────────────────────────
+
     public byte[] generateQr(Integer invoiceId) {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Invoice not found with id: " + invoiceId));
 
-        return qrGeneratorUtil.generateForInvoice(
-                invoice.getInvoiceNumber(),
-                invoice.getIdInvoice(),
-                invoice.getTotal()
-        );
+        return qrGeneratorUtil.generatePaymentUrl(invoice.getIdInvoice(), baseUrl);
+    }
+
+// ── RF-23: Pay by QR simulation ──────────────────────────────────────────
+
+    @Transactional
+    public PaymentResponse payByQr(Integer invoiceId) {
+        Invoice invoice = invoiceRepository.findById(invoiceId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Invoice not found with id: " + invoiceId));
+
+        if (invoice.getPayStatus() == InvoicePayStatus.PAID) {
+            throw new BusinessException("Invoice is already paid");
+        }
+
+        if (paymentRepository.existsById(Long.valueOf(invoiceId))) {
+            throw new BusinessException("A payment already exists for this invoice");
+        }
+
+        // Usar el usuario que registró la venta como responsable del pago QR
+        User user = invoice.getSale().getUser();
+
+        Payment payment = Payment.builder()
+                .invoice(invoice)
+                .user(user)
+                .type(PaymentMethod.QR)
+                .status(PaymentStatus.APROBADO)
+                .amount(invoice.getTotal())
+                .externalReference("QR-" + UUID.randomUUID())
+                .paymentGateway("QR_SIMULATION")
+                .build();
+
+        invoice.setPayStatus(InvoicePayStatus.PAID);
+        invoiceRepository.save(invoice);
+
+        Payment saved = paymentRepository.save(payment);
+        publishPaymentProcessedEvent(saved, invoice);
+        return paymentMapper.toResponse(saved);
     }
 
     // ── Internal ──────────────────────────────────────────────────────────────

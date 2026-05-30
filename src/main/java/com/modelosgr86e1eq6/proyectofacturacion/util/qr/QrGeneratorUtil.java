@@ -63,6 +63,19 @@ public class QrGeneratorUtil {
     }
 
     /**
+     * Generates a QR code that encodes a payment URL for simulation.
+     *
+     * @param invoiceId numeric PK of the invoice
+     * @param baseUrl   base URL of the application
+     * @return PNG-encoded QR image bytes
+     */
+    public byte[] generatePaymentUrl(Integer invoiceId, String baseUrl) {
+        String url = baseUrl + "/api/v1/payments/qr/pay/" + invoiceId;
+        log.debug("Generating payment QR with URL: {}", url);
+        return generate(url, DEFAULT_SIZE_PX);
+    }
+
+    /**
      * Generates a QR code PNG image from the given raw content string.
      *
      * @param content  the text/URL to encode in the QR code

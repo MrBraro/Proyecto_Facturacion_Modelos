@@ -61,7 +61,7 @@ public class Invoice {
      * <p>No se inserta ni actualiza desde Java; Hibernate lo lee de la BD
      * tras el INSERT gracias a {@code @Generated(INSERT)}.</p>
      */
-    @Column(name = "invoice_number", insertable = false, updatable = false, length = 20)
+    @Column(name = "invoice_number", nullable = false, unique = true, length = 20)
     private String invoiceNumber;
 
     /**
