@@ -6,6 +6,10 @@
 spring:
   profiles:
     active: dev
+  config:
+    import: optional:dotenv.properties
+
+
 
 ---
 # =============================================
@@ -33,7 +37,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update          # Crea/actualiza tablas automáticamente
+      ddl-auto: update         
     show-sql: true              # Muestra SQL en consola
     properties:
       hibernate:
@@ -53,6 +57,29 @@ spring:
     # Dev:  el puerto que use Live Server u otro servidor estático del frontend
     # Prod: reemplazar con el dominio real
     allowed-origins: http://localhost:5173,http://127.0.0.1:5173
+
+  # ─── MAIL CONFIGURATION (SMTP GMAIL) ───────
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_USERNAME:sangroniscarlosenrique2@gmail.com}
+    password: ${GMAIL_APP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+# ─── TWILIO CONFIGURATION ──────────────────
+twilio:
+  account-sid: ${TWILIO_ACCOUNT_SID:}
+  auth-token: ${TWILIO_AUTH_TOKEN:}
+  phone-number: ${TWILIO_PHONE_NUMBER:}
 
 # ─── APP CUSTOM PROPERTIES ──────────────────
 app:
