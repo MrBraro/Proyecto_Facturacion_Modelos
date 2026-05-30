@@ -62,6 +62,8 @@ spring:
       mail:
         smtp:
           auth: true
+          ssl:
+            trust: smtp.gmail.com  # 👈 SÁLVANDAS: Obliga a Java a confiar en Gmail
           starttls:
             enable: true
             required: true
