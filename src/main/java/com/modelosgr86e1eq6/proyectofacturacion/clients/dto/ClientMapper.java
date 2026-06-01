@@ -9,7 +9,7 @@ public class ClientMapper {
     public ClientResponse toResponse(Client client) {
         ClientResponse response = new ClientResponse();
         response.setIdClient(client.getIdClient());
-        response.setNIT(client.getNIT());
+        response.setNit(client.getNit());
         response.setName(client.getName());
         response.setEmail(client.getEmail());
         response.setTelephone(client.getTelephone());
@@ -22,7 +22,7 @@ public class ClientMapper {
  
     public Client toEntity(CreateClientRequest request) {
         return Client.builder()
-                .NIT(request.getNIT())
+                .nit(request.getNit())
                 .name(request.getName())
                 .email(request.getEmail())
                 .telephone(request.getTelephone())

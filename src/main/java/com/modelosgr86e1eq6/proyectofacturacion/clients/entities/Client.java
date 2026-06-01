@@ -27,8 +27,8 @@ public class Client {
     @Column(name = "id_client", updatable = false, nullable = false)
     private Integer idClient;
 
-    @Column(name = "NIT", nullable = false, length = 12)
-    private String NIT;
+    @Column(name = "nit", nullable = false, length = 12)
+    private String nit;
 
     @Column(name = "name", nullable = false, length = 120)
     private String name;
