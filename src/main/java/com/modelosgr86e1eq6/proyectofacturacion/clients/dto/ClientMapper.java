@@ -32,6 +32,7 @@ public class ClientMapper {
  
     public void updateEntity(Client client, UpdateClientRequest request) {
         client.setName(request.getName());
+        client.setNit(request.getNit());
         client.setEmail(request.getEmail());
         client.setTelephone(request.getTelephone());
         client.setAddress(request.getAddress());
