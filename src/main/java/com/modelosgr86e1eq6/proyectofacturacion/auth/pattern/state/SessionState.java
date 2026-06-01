@@ -1,4 +1,4 @@
-package com.modelosgr86e1eq6.proyectofacturacion.auth.pattern;
+package com.modelosgr86e1eq6.proyectofacturacion.auth.pattern.state;
 
 import com.modelosgr86e1eq6.proyectofacturacion.auth.entities.Session;
 // ─────────────────────────────────────────────────────────────────────────────
