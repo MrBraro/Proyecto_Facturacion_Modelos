@@ -3,7 +3,8 @@ package com.modelosgr86e1eq6.proyectofacturacion.auth.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import com.modelosgr86e1eq6.proyectofacturacion.users.entities.User;
- 
+import com.modelosgr86e1eq6.proyectofacturacion.auth.pattern.state.SessionStateFactory;
+import com.modelosgr86e1eq6.proyectofacturacion.auth.pattern.state.SessionState;
 import java.time.LocalDateTime;
  
 @Entity
