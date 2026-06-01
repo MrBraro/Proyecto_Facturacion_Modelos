@@ -1,28 +1,28 @@
 package com.modelosgr86e1eq6.proyectofacturacion.audits.repositories;
 
-import com.modelosgr86e1eq6.proyectofacturacion.audits.entities.AuditEntity;
+import java.time.LocalDateTime;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
- 
-import java.time.LocalDateTime;
+
+import com.modelosgr86e1eq6.proyectofacturacion.audits.entities.AuditEntity;
  
 public interface AuditRepository extends JpaRepository<AuditEntity, Integer> {
  
     /*
      * Ejemplo de query JPQL con filtros dinámicos.
-     * Este es el patrón que sustituye a JDBC para consultas con múltiples
-     * parámetros opcionales: se usan IS NULL como cortocircuito —
-     * si el parámetro llega null, esa condición siempre es true y se ignora.
+     * Usamos COALESCE para evitar problemas de tipado en Postgres
+     * cuando los parametros opcionales llegan null.
      */
     @Query("""
         SELECT a FROM AuditEntity a
-        WHERE (:userId   IS NULL OR a.user.idUser = :userId)
-          AND (:action   IS NULL OR a.action      = :action)
-          AND (:from     IS NULL OR a.createdAt  >= :from)
-          AND (:to       IS NULL OR a.createdAt  <= :to)
+        WHERE a.user.idUser = COALESCE(:userId, a.user.idUser)
+          AND a.action      = COALESCE(:action, a.action)
+          AND a.createdAt  >= COALESCE(:from, a.createdAt)
+          AND a.createdAt  <= COALESCE(:to, a.createdAt)
         ORDER BY a.createdAt DESC
     """)
     Page<AuditEntity> findByFilters(
