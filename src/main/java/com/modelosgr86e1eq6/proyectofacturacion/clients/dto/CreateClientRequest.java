@@ -16,6 +16,10 @@ public class CreateClientRequest {
     @NotBlank(message = "El nombre es obligatorio")
     @Size(max = 120, message = "El nombre no puede superar los 120 caracteres")
     private String name;
+
+    @NotBlank(message = "El NIT es obligatorio")
+    @Size(max = 12, message = "El NIT no puede superar los 12 caracteres")
+    private String NIT;
  
     @NotBlank(message = "El correo electrónico es obligatorio")
     @Email(message = "El correo electrónico no tiene un formato válido")
