@@ -6,7 +6,6 @@ import com.modelosgr86e1eq6.proyectofacturacion.products.dto.CreateProductReques
 import com.modelosgr86e1eq6.proyectofacturacion.products.dto.ProductResponse;
 import com.modelosgr86e1eq6.proyectofacturacion.products.dto.UpdateProductRequest;
 import com.modelosgr86e1eq6.proyectofacturacion.products.entities.Product;
-import com.modelosgr86e1eq6.proyectofacturacion.products.exceptions.InsufficientStockException;
 import com.modelosgr86e1eq6.proyectofacturacion.products.mappers.ProductMapper;
 import com.modelosgr86e1eq6.proyectofacturacion.products.repositories.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -84,9 +83,11 @@ public class ProductService {
     public ProductResponse update(Integer id, UpdateProductRequest request) {
         Product product = getActiveOrThrow(id);
 
+        product.setCode(request.getCode());
         product.setName(request.getName());
         product.setPrice(request.getPrice());
         product.setDescription(request.getDescription());
+        product.setStock(request.getStock());
 
         productRepository.save(product);
         return productMapper.toResponse(product);
@@ -120,21 +121,6 @@ public class ProductService {
                 .stream()
                 .map(productMapper::toResponse)
                 .toList();
-    }
-
-    // ── Validar Stock Interno (Auxiliar para Ventas) ──────────────────────────
-
-    /**
-     * Valida stock disponible (usado internamente por VentaService).
-     */
-    public void validateStock(Integer productId, int requiredQuantity) {
-        if (requiredQuantity <= 0) {
-            throw new BusinessException("La cantidad requerida debe ser mayor a cero");
-        }
-        Product product = getActiveOrThrow(productId);
-        if (product.getStock() < requiredQuantity) {
-            throw new InsufficientStockException(productId, product.getStock(), requiredQuantity);
-        }
     }
 
     // ── Internal ──────────────────────────────────────────────────────────────
