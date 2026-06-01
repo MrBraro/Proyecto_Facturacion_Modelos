@@ -13,23 +13,36 @@ public interface SessionRepository extends JpaRepository<Session, Integer> {
  
     Optional<Session> findByToken(String token);
  
-    // Revoca todas las sesiones activas de un usuario (ej: cambio de contraseña)
+    /**
+     * Revoca todas las sesiones activas de un usuario.
+     * Actualiza TANTO isActive COMO status para mantener consistencia
+     * entre el campo legacy (isActive) y el nuevo campo del patrón State (status).
+     */
     @Modifying
     @Query("""
         UPDATE Session s
-        SET s.isActive = false, s.revokedAt = CURRENT_TIMESTAMP
-        WHERE s.user.idUser = :userId AND s.isActive = true
-    """)
+        SET s.isActive = false,
+            s.status   = 'REVOKED',
+            s.revokedAt = CURRENT_TIMESTAMP
+        WHERE s.user.idUser = :userId
+          AND s.isActive = true
+        """)
     void revokeAllByUserId(@Param("userId") Integer userId);
-
-    // Revoca todas las sesiones activas EXCEPTO la actual (para cambio de contraseña)
-    // Permite al usuario continuar en el dispositivo actual, pero desconecta otros
+ 
+    /**
+     * Revoca todas las sesiones activas de un usuario excepto la sesión actual.
+     * Permite al usuario continuar en el dispositivo actual pero desconecta otros.
+     */
     @Modifying
     @Query("""
         UPDATE Session s
-        SET s.isActive = false, s.revokedAt = CURRENT_TIMESTAMP
-        WHERE s.user.idUser = :userId AND s.isActive = true AND s.token != :currentToken
-    """)
-    void revokeAllByUserIdExceptToken(@Param("userId") Integer userId,
-                                      @Param("currentToken") String currentToken);
+        SET s.isActive = false,
+            s.status   = 'REVOKED',
+            s.revokedAt = CURRENT_TIMESTAMP
+        WHERE s.user.idUser  = :userId
+          AND s.isActive     = true
+          AND s.token       != :currentToken
+        """)
+    void revokeAllByUserIdExceptToken(@Param("userId")       Integer userId,
+                                      @Param("currentToken") String  currentToken);
 }
