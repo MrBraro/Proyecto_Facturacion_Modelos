@@ -1,5 +1,6 @@
 package com.modelosgr86e1eq6.proyectofacturacion.products.dto;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -17,6 +18,9 @@ import java.math.BigDecimal;
 @Data
 public class UpdateProductRequest {
 
+    @NotBlank(message = "El código del producto es obligatorio")
+    private String code;
+
     /** Nuevo nombre descriptivo del producto. */
     @NotBlank(message = "El nombre del producto es obligatorio")
     private String name;
@@ -28,4 +32,8 @@ public class UpdateProductRequest {
 
     /** Nueva descripción. Si es {@code null}, se limpia la descripción existente. */
     private String description;
+
+    @NotNull(message = "El stock es obligatorio")
+    @Min(value = 0, message = "El stock no puede ser negativo")
+    private Integer stock;
 }

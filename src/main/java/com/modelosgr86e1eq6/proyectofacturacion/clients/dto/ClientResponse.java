@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 public class ClientResponse {
  
     private Integer idClient;
+    private String nit;
     private String name;
     private String email;
     private String telephone;

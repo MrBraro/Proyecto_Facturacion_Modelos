@@ -27,7 +27,7 @@ public class ClientController {
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity<ApiResponse<ClientResponse>> create(
             @Valid @RequestBody CreateClientRequest request) {
- 
+
         ClientResponse response = clientService.create(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)

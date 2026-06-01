@@ -83,6 +83,7 @@ public class UserService {
  
         user.setName(request.getName());
         user.setEmail(request.getEmail());
+        user.setRole(Role.valueOf(request.getRole()));
         userRepository.save(user);
  
         auditService.log(AuditService.USER_UPDATED, admin, null, ip,
