@@ -10,13 +10,12 @@ import org.springframework.stereotype.Component;
  *
  * Usado por: Session.getState(), AuthService, JwtAuthFilter.
  */
-@Component
 public class SessionStateFactory {
- 
+
     private static final SessionState ACTIVE  = new ActiveSessionState();
     private static final SessionState REVOKED = new RevokedSessionState();
     private static final SessionState EXPIRED = new ExpiredSessionState();
- 
+
     public static SessionState resolve(SessionStatus status) {
         return switch (status) {
             case ACTIVE  -> ACTIVE;
