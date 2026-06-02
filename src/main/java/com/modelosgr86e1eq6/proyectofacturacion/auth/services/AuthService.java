@@ -122,7 +122,6 @@ public class AuthService {
         // ANTES: session.setActive(false); session.setRevokedAt(LocalDateTime.now());
         // AHORA: el estado activo valida la transición y actualiza todos los campos.
         session.getState().revoke(session); // Delegar revocación al estado actual
-        session.setRevokedAt(LocalDateTime.now());
         sessionRepository.save(session);
  
         auditService.log(AuditService.LOGOUT, session.getUser(), session, ip, null);
