@@ -93,12 +93,13 @@ public class AuthService {
         String token = jwtUtils.generateToken(user);
  
         // Persistir sesión
+        // Al crear la sesión, el status por defecto es ACTIVE (@Builder.Default)
         Session session = Session.builder()
                 .user(user)
                 .token(token)
                 .expiresAt(jwtUtils.getExpirationAsLocalDateTime())
                 .isActive(true)
-                .build();
+                .build(); // isActive=true, status=ACTIVE por Builder.Default
         sessionRepository.save(session);
  
         auditService.log(AuditService.LOGIN_OK, user, session, ip, null);
@@ -118,8 +119,9 @@ public class AuthService {
         Session session = sessionRepository.findByToken(token)
                 .orElseThrow(() -> new ResourceNotFoundException("Sesión no encontrada"));
  
-        session.setActive(false);
-        session.setRevokedAt(LocalDateTime.now());
+        // ANTES: session.setActive(false); session.setRevokedAt(LocalDateTime.now());
+        // AHORA: el estado activo valida la transición y actualiza todos los campos.
+        session.getState().revoke(session); // Delegar revocación al estado actual
         sessionRepository.save(session);
  
         auditService.log(AuditService.LOGOUT, session.getUser(), session, ip, null);
@@ -147,7 +149,7 @@ public class AuthService {
                 .token(resetToken)
                 .expiresAt(LocalDateTime.now().plusMinutes(30))
                 .isActive(true)
-                .build();
+                .build(); // isActive=true, status=ACTIVE por Builder.Default
         sessionRepository.save(session);
  
         // MVP: log en consola en lugar de email real
@@ -162,23 +164,25 @@ public class AuthService {
     @Transactional
     public void resetPassword(ResetPasswordRequest request, String ip) {
         Session session = sessionRepository.findByToken(request.getToken())
-                .filter(Session::isActive)
-                .orElseThrow(() -> new BusinessException(
-                        "Token inválido o expirado"));
+                .orElseThrow(() -> new BusinessException("Token inválido o expirado"));
  
-        if (session.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new BusinessException("El token ha expirado");
-        }
+        // ANTES: .filter(Session::isActive) + if (expiresAt.isBefore(now)) → dos checks separados
+        // AHORA: validate() unifica ambas validaciones en el estado correspondiente.
+        //   - ActiveSessionState: verifica expiración por tiempo y lanza si expiró
+        //   - RevokedSessionState: lanza directamente "Token inválido: sesión revocada"
+        //   - ExpiredSessionState: lanza directamente "El token ha expirado"
+        session.getState().validate(session);
  
         User user = session.getUser();
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         user.setPasswordChangedAt(LocalDateTime.now());
         userRepository.save(user);
  
-        // Revocar el token usado y todas las sesiones activas
-        session.setActive(false);
-        session.setRevokedAt(LocalDateTime.now());
+        // Revocar el token de reset usando el estado
+        session.getState().revoke(session);
         sessionRepository.save(session);
+ 
+        // Revocar todas las demás sesiones activas del usuario
         sessionRepository.revokeAllByUserId(user.getIdUser());
  
         auditService.log(AuditService.PASSWORD_CHANGED, user, null, ip,

@@ -3,7 +3,8 @@ package com.modelosgr86e1eq6.proyectofacturacion.auth.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import com.modelosgr86e1eq6.proyectofacturacion.users.entities.User;
- 
+import com.modelosgr86e1eq6.proyectofacturacion.auth.pattern.state.SessionStateFactory;
+import com.modelosgr86e1eq6.proyectofacturacion.auth.pattern.state.SessionState;
 import java.time.LocalDateTime;
  
 @Entity
@@ -32,6 +33,18 @@ public class Session {
  
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
+
+    /**
+     * Campo de estado explícito — reemplaza la representación implícita
+     * que antes requería combinar isActive + revokedAt + expiresAt
+     * para inferir en qué estado estaba la sesión.
+     *
+     * Se persiste como String en la columna "status" para legibilidad en BD.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    @Builder.Default
+    private SessionStatus status = SessionStatus.ACTIVE;
  
     @Column(name = "is_active", nullable = false)
     @Builder.Default
@@ -43,5 +56,16 @@ public class Session {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    /**
+     * Punto de entrada al patrón State.
+     * Retorna la implementación de SessionState correspondiente al estado actual.
+     * Cada llamada resuelve el estado en tiempo de ejecución desde la factory,
+     * sin necesidad de almacenar el objeto de estado (no es serializable).
+     */
+    @Transient
+    public SessionState getState() {
+        return SessionStateFactory.resolve(this.status);
     }
 }
